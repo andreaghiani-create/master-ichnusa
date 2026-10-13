@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2A1A69">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Master Ichnusa">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Master Ichnusa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: app a colonna singola, barra tab fissa in basso stile iOS; numeri da monitor remoergometro */
+/* Colori dal logo della Canottieri Ichnusa: blu navy del cerchio, giallo del guidone, corda */
+:root{
+  --bg:#F2F1F7; --surface:#FFFFFF; --ink:#1A1442; --muted:#5F5A7E; --line:#DDDAEA;
+  --accent:#2A1A69; --accent-ink:#FFFFFF; --soft:#E8E5F4;
+  --hero:#2A1A69; --hero-ink:#FFFFFF; --hero-muted:#C9C3EA; --gold:#EEE341; --rope:#BDA478;
+  --good:#1E7D4F; --bad:#B4412A;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E0B22; --surface:#191538; --ink:#ECEAF7; --muted:#A6A0C6; --line:#2C2656;
+  --accent:#EEE341; --accent-ink:#1A1442; --soft:#241F4E;
+  --hero:#1F1652; --hero-ink:#FFFFFF; --hero-muted:#B9B2E0; --gold:#EEE341; --rope:#BDA478;
+  --good:#5CC991; --bad:#F08A70; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E0B22; --surface:#191538; --ink:#ECEAF7; --muted:#A6A0C6; --line:#2C2656;
+  --accent:#EEE341; --accent-ink:#1A1442; --soft:#241F4E;
+  --hero:#1F1652; --hero-ink:#FFFFFF; --hero-muted:#B9B2E0; --gold:#EEE341; --rope:#BDA478;
+  --good:#5CC991; --bad:#F08A70; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
+.hero{margin-inline:-16px;margin-bottom:16px;background:var(--hero);color:var(--hero-ink);padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 16px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--gold) 0 70%,var(--rope) 70% 100%)}
+.hero-in{display:flex;align-items:center;gap:14px}
+.badge{width:72px;height:72px;border-radius:50%;background:#FFFFFF;padding:4px;box-sizing:border-box;flex:none;object-fit:contain;box-shadow:0 0 0 3px rgba(255,255,255,.18)}
+.hero-t{min-width:0}
+.club{font:600 12px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.hero h1{color:var(--hero-ink)}
+.hero .sub{color:var(--hero-muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;margin-bottom:4px}
+.stat{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:8px 12px;min-width:0}
+.stat small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--hero-muted)}
+.stat b{font:700 19px var(--mono);font-variant-numeric:tabular-nums;color:var(--hero-ink);white-space:nowrap}
+.stat.warn{background:var(--gold);border-color:var(--gold)}
+.stat.warn small,.stat.warn b{color:#1A1442}
+@media (min-width:600px){.hero{border-radius:0 0 20px 20px}}
+h1{font:700 32px/1 var(--display);letter-spacing:.01em;text-transform:uppercase;margin:2px 0 0}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font:600 13px var(--body);background:var(--soft);color:var(--ink);white-space:nowrap}
+.chip.warn{background:var(--bad);color:var(--surface)}
+.banner{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+section.view{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h2{font:600 20px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin:0 0 2px;color:var(--ink)}
+.card h2::before{content:"";display:inline-block;width:10px;height:10px;margin-right:8px;background:var(--gold);clip-path:polygon(0 0,100% 50%,0 100%);vertical-align:1px}
+.card .hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid .full{grid-column:1/-1}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500;min-width:0}
+input,select,textarea{font:500 17px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;box-sizing:border-box;min-width:0}
+input.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{min-height:64px;resize:vertical}
+.lcd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--ink);color:var(--bg)}
+.lcd span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.8}
+.lcd b{font:700 24px var(--mono);font-variant-numeric:tabular-nums}
+.btn{appearance:none;border:0;border-radius:12px;padding:13px 16px;font:600 17px var(--body);background:var(--accent);color:var(--accent-ink);cursor:pointer;width:100%}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.btn.small{width:auto;padding:7px 12px;font-size:14px}
+.btn.danger{background:var(--bad);color:var(--surface)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:15px;z-index:20}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:10}
+nav.tabs button{appearance:none;background:none;border:0;color:var(--muted);font:600 12px var(--body);display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent)}
+nav.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* storico */
+.sess-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
+.sess-head h3{font:600 19px var(--display);text-transform:uppercase;margin:0}
+.sess-head .d{color:var(--muted);font-size:13px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.m{display:flex;flex-direction:column;min-width:0;border-top:1px solid var(--line);padding-top:6px}
+.m small{color:var(--muted);font-size:12px}
+.m b{font:700 18px var(--mono);font-variant-numeric:tabular-nums}
+.m i{font-style:normal;font-size:12px;font-family:var(--mono)}
+.up{color:var(--good)} .down{color:var(--bad)}
+.empty{text-align:center;color:var(--muted);padding:28px 12px}
+.empty b{display:block;color:var(--ink);font:600 20px var(--display);text-transform:uppercase;margin-bottom:6px}
+/* grafici */
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font:11px var(--mono)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:baseline}
+.kv dt{color:var(--muted);font-size:14px}
+.kv dd{margin:0;font:700 18px var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+/* programma */
+.wk{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.wk.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.wk-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.wk-head h2{font:600 20px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin:0}
+.wk-head span{color:var(--muted);font-size:13px}
+.wk-head .now-chip{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:2px 9px;font:600 12px var(--body)}
+details.day{border-top:1px solid var(--line);padding-top:8px}
+details.day summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px;font-weight:600}
+details.day summary::-webkit-details-marker{display:none}
+details.day summary::after{content:"+";color:var(--accent);font:700 18px var(--mono)}
+details.day[open] summary::after{content:"−"}
+details.day summary small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+.day ul{margin:8px 0 2px;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.day li{line-height:1.4}
+.day li ul{margin-top:4px}
+.pv{font:700 14px var(--mono);background:var(--soft);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.info{display:grid;gap:6px;font-size:15px}
+.info b{font-weight:600}
+.confirm{background:var(--soft);border-radius:10px;padding:10px;margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+html,body{margin:0}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-in">
+      <img class="badge" src="logo.png" alt="Canottieri Ichnusa Cagliari" width="72" height="72">
+      <div class="hero-t">
+        <div class="club">Test e programma · Cagliari</div>
+        <h1>Master Ichnusa</h1>
+        <div class="sub" id="who">Programma invernale 2026/27</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat" id="nextStat"><small id="nextLbl">Prossimo test</small><b id="nextChip">ogni 60 gg</b></div>
+      <div class="stat"><small>Ultimo passo 3000</small><b id="lastSplit">–</b></div>
+    </div>
+  </header>
+  <div class="banner" id="storeBanner" hidden></div>
+
+  <!-- NUOVO TEST -->
+  <section class="view" id="v-test">
+    <form id="f" class="view" autocomplete="off" novalidate>
+      <div class="card">
+        <h2 id="formTitle">Nuova sessione</h2>
+        <p class="hint">Test di ingresso 16–18 ottobre 2026, poi ogni 60 giorni.</p>
+        <div class="grid">
+          <label>Data<input type="date" id="date" required></label>
+          <label>Sessione<select id="label">
+            <option>Test di ingresso</option><option>Test 2</option><option>Test 3</option><option>Test 4</option><option>Altro</option>
+          </select></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3000 m · 22 colpi</h2>
+        <p class="hint">Remoergometro, capacità aerobica. Digita solo le cifre: i due punti e il decimo li aggiunge l'app.</p>
+        <div class="grid">
+          <label class="full">Tempo<input class="num" id="t3000" inputmode="numeric" placeholder="es. 11425 → 11:42.5" autocomplete="off"></label>
+          <label>FC fine test<input class="num" id="hr3000end" inputmode="numeric" placeholder="bpm"></label>
+          <label>FC dopo 3'<input class="num" id="hr3000rec" inputmode="numeric" placeholder="bpm"></label>
+        </div>
+        <div class="lcd"><span>Passo medio /500 m</span><b id="split3000">–:––.–</b></div>
+      </div>
+
+      <div class="card">
+        <h2>500 m massimale</h2>
+        <p class="hint">Velocità massimale. Digita solo le cifre, come per il 3000.</p>
+        <div class="grid">
+          <label class="full">Tempo<input class="num" id="t500" inputmode="numeric" placeholder="es. 1382 → 1:38.2" autocomplete="off"></label>
+          <label>FC fine test<input class="num" id="hr500end" inputmode="numeric" placeholder="bpm"></label>
+          <label>FC dopo 3'<input class="num" id="hr500rec" inputmode="numeric" placeholder="bpm"></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Corpo libero</h2>
+        <p class="hint">Numero massimo di ripetizioni</p>
+        <div class="grid">
+          <label>Spinte a terra<input class="num" id="pushups" inputmode="numeric"></label>
+          <label>Addominali 90° piedi su panca<input class="num" id="abs" inputmode="numeric"></label>
+          <label>Accosciate in 5'<input class="num" id="squats" inputmode="numeric"></label>
+          <label>Lombari mani e piedi<input class="num" id="lumbar" inputmode="numeric"></label>
+          <label class="full">Note<textarea id="note" placeholder="Condizioni, sensazioni, attrezzo usato"></textarea></label>
+        </div>
+      </div>
+
+      <button class="btn" type="submit" id="saveBtn">Salva sessione</button>
+      <button class="btn ghost" type="button" id="cancelEdit" hidden>Annulla modifica</button>
+    </form>
+  </section>
+
+  <!-- STORICO -->
+  <section class="view" id="v-hist" hidden></section>
+
+  <!-- ANDAMENTO -->
+  <section class="view" id="v-trend" hidden></section>
+
+  <!-- PROFILO -->
+  <!-- PROGRAMMA -->
+  <section class="view" id="v-prog" hidden></section>
+
+  <section class="view" id="v-prof" hidden>
+    <div class="card">
+      <h2>Atleta</h2>
+      <p class="hint">Serve per calcolare la frequenza di lavoro del programma.</p>
+      <div class="grid">
+        <label class="full">Nome<input id="pName"></label>
+        <label>Anno di nascita<input class="num" id="pYear" inputmode="numeric" placeholder="es. 1975"></label>
+        <label>Sesso<select id="pSex"><option value="">–</option><option value="M">Uomo</option><option value="F">Donna</option></select></label>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn" type="button" id="saveProf">Salva profilo</button></div>
+    </div>
+    <div class="card">
+      <h2>Parametri di allenamento</h2>
+      <p class="hint">Calcolati come indicato nel programma.</p>
+      <dl class="kv" id="params"></dl>
+    </div>
+    <div class="card">
+      <h2>Backup dati</h2>
+      <p class="hint">I dati restano solo su questo telefono. Esporta ogni tanto un CSV (si apre con Excel o Numbers) e conservalo: serve anche per passare a un altro telefono.</p>
+      <p class="hint" id="lastBackup" style="margin:0 0 10px"></p>
+      <div class="row"><button class="btn ghost" type="button" id="exportBtn">Esporta CSV</button></div>
+      <label style="margin-top:12px">Importa da CSV esportato<input type="file" id="importFile" accept=".csv,text/csv"></label>
+    </div>
+    <p class="hint" style="text-align:center;margin:4px 0 0" id="appVer"></p>
+  </section>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-v="test" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nuovo</button>
+  <button role="tab" data-v="hist" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Storico</button>
+  <button role="tab" data-v="trend" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Andamento</button>
+  <button role="tab" data-v="prog" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Programma</button>
+  <button role="tab" data-v="prof" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profilo</button>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const LS = "registroTest.v1";
+const APP_VERSION = "1.4 · 13 ottobre 2026";
+let db = null, coll = null, uid = null, mode = "local";
+let sessions = [], profile = {}, editingId = null, pendingDelete = null;
+
+/* ---------- utilità tempi ---------- */
+function parseTime(s){
+  s = String(s||"").trim().replace(",", ".");
+  if(!s) return null;
+  const p = s.split(":");
+  let sec;
+  if(p.length === 1) sec = parseFloat(p[0]);
+  else if(p.length === 2){ if(parseFloat(p[1]) >= 60) return null; sec = parseInt(p[0],10)*60 + parseFloat(p[1]); }
+  else if(p.length === 3) sec = parseInt(p[0],10)*3600 + parseInt(p[1],10)*60 + parseFloat(p[2]);
+  else return null;
+  return Number.isFinite(sec) && sec > 0 ? Math.round(sec*10)/10 : null;
+}
+function fmt(sec){
+  if(sec == null || !Number.isFinite(sec)) return "–";
+  const t = Math.round(sec*10)/10, m = Math.floor(t/60), s = t - m*60;
+  return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1);
+}
+const intOrNull = v => { const n = parseInt(String(v||"").trim(),10); return Number.isFinite(n) && n >= 0 ? n : null; };
+const split3000 = s => s && s.t3000 ? s.t3000/6 : null;
+const fmtDate = d => d ? new Date(d+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}) : "";
+
+/* ---------- archiviazione (solo su questo dispositivo) ---------- */
+function lsLoad(){ try{ const o = JSON.parse(localStorage.getItem(LS)||"{}"); sessions = o.sessions||[]; profile = o.profile||{}; }catch(e){} }
+function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify({sessions, profile})); return true; }catch(e){ return false; } }
+async function saveSession(rec){ const i = sessions.findIndex(x=>x.id===rec.id); if(i>=0) sessions[i]=rec; else sessions.push(rec); if(!lsSave()) throw {code:"storage"}; renderAll(); }
+async function deleteSession(id){ sessions = sessions.filter(x=>x.id!==id); lsSave(); renderAll(); }
+async function saveProfile(p){ profile = p; if(!lsSave()) throw {code:"storage"}; renderAll(); }
+function setBanner(text){ const b=$("storeBanner"); b.textContent=text||""; b.hidden=!text; }
+async function connect(){
+  lsLoad(); renderAll();
+  try{ if(navigator.storage && navigator.storage.persist) await navigator.storage.persist(); }catch(e){}
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if(!standalone && isIOS) setBanner("Per installarla: tocca Condividi e poi \u201cAggiungi alla schermata Home\u201d. Così i dati restano salvati sul telefono.");
+  else if(!standalone) setBanner("Per installarla: dal menu del browser scegli \u201cInstalla app\u201d o \u201cAggiungi a schermata Home\u201d.");
+}
+
+/* ---------- tab ---------- */
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => showView(b.dataset.v)));
+function showView(v){
+  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.v===v));
+  ["test","hist","trend","prog","prof"].forEach(k => $("v-"+k).hidden = k!==v);
+  try{ localStorage.setItem(LS+".tab", v); }catch(e){}
+  window.scrollTo(0,0);
+}
+
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2200); }
+
+/* ---------- form ---------- */
+const FIELDS = ["hr3000end","hr3000rec","hr500end","hr500rec","pushups","abs","squats","lumbar"];
+function resetForm(){
+  $("f").reset(); editingId = null;
+  $("date").value = new Date().toISOString().slice(0,10);
+  $("label").value = sessions.length ? "Test " + Math.min(sessions.length+1,4) : "Test di ingresso";
+  if(sessions.length >= 4) $("label").value = "Altro";
+  $("formTitle").textContent = "Nuova sessione"; $("saveBtn").textContent = "Salva sessione"; $("cancelEdit").hidden = true;
+  updateLive();
+}
+function updateLive(){ const t = parseTime($("t3000").value); $("split3000").textContent = t ? fmt(t/6) : "–:––.–"; }
+function fmtDigits(d){
+  d = d.replace(/\D/g,"").replace(/^0+/,"").slice(0,6);
+  if(!d) return "";
+  const t = d.slice(-1), rest = d.slice(0,-1);
+  if(rest.length <= 2) return (rest || "0") + "." + t;
+  return rest.slice(0,-2) + ":" + rest.slice(-2) + "." + t;
+}
+["t3000","t500"].forEach(id => $(id).addEventListener("input", e => { e.target.value = fmtDigits(e.target.value); if(id==="t3000") updateLive(); }));
+
+$("cancelEdit").addEventListener("click", resetForm);
+
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const t3000 = parseTime($("t3000").value), t500 = parseTime($("t500").value);
+  if($("t3000").value.trim() && !t3000){ toast("Tempo 3000 m non valido: controlla i secondi (massimo 59)"); return; }
+  if($("t500").value.trim() && !t500){ toast("Tempo 500 m non valido: controlla i secondi (massimo 59)"); return; }
+  if(!$("date").value){ toast("Inserisci la data"); return; }
+  const rec = { kind:"test", id: editingId || ("s" + Date.now()), date: $("date").value, label: $("label").value,
+    t3000, t500, note: $("note").value.trim(), updatedAt: new Date().toISOString() };
+  FIELDS.forEach(k => rec[k] = intOrNull($(k).value));
+  const has = rec.t3000 || rec.t500 || FIELDS.some(k => rec[k] != null);
+  if(!has){ toast("Inserisci almeno un risultato"); return; }
+  $("saveBtn").disabled = true;
+  try{ await saveSession(rec); toast(editingId ? "Sessione aggiornata" : "Sessione salvata"); resetForm(); showView("hist"); }
+  catch(err){ toast(err && err.code==="storage" ? "Memoria del browser non disponibile: esci dalla navigazione privata" : "Salvataggio non riuscito, riprova"); }
+  finally{ $("saveBtn").disabled = false; }
+});
+
+function editSession(id){
+  const s = sessions.find(x=>x.id===id); if(!s) return;
+  editingId = id;
+  $("date").value = s.date; $("label").value = s.label;
+  $("t3000").value = s.t3000 ? fmt(s.t3000) : ""; $("t500").value = s.t500 ? fmt(s.t500) : "";
+  FIELDS.forEach(k => $(k).value = s[k] ?? ""); $("note").value = s.note || "";
+  $("formTitle").textContent = "Modifica sessione"; $("saveBtn").textContent = "Salva modifiche"; $("cancelEdit").hidden = false;
+  updateLive(); showView("test");
+}
+
+/* ---------- calcoli ---------- */
+const sorted = () => sessions.slice().sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:0);
+function hrMax(){ const y = parseInt(profile.birthYear,10); if(!y) return null; const age = new Date().getFullYear() - y; return 220 - age + 10; }
+function nextDue(){ const s = sorted(); if(!s.length) return null; const d = new Date(s[s.length-1].date+"T12:00:00"); d.setDate(d.getDate()+60); return d; }
+
+/* metriche: lower = tempo (meno è meglio) */
+const METRICS = [
+  {k:"split3000", n:"3000 m · passo /500", get:split3000, time:true, lower:true},
+  {k:"t3000", n:"3000 m · tempo", get:s=>s.t3000, time:true, lower:true},
+  {k:"t500", n:"500 m · tempo", get:s=>s.t500, time:true, lower:true},
+  {k:"pushups", n:"Spinte a terra", get:s=>s.pushups},
+  {k:"abs", n:"Addominali", get:s=>s.abs},
+  {k:"squats", n:"Accosciate in 5'", get:s=>s.squats},
+  {k:"lumbar", n:"Lombari", get:s=>s.lumbar},
+];
+
+/* ---------- render ---------- */
+function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function delta(cur, prev, m){
+  if(cur==null || prev==null) return "";
+  const d = cur - prev; if(Math.abs(d) < 0.05) return `<i>=</i>`;
+  const better = m.lower ? d < 0 : d > 0;
+  const txt = m.time ? (d>0?"+":"−") + Math.abs(d).toFixed(1) + "s" : (d>0?"+":"−") + Math.abs(d);
+  return `<i class="${better?"up":"down"}">${txt}</i>`;
+}
+function hrRec(end, rec){ return (end!=null && rec!=null) ? `${end} → ${rec} <i class="up">−${end-rec}</i>` : (end!=null? String(end) : "–"); }
+
+function renderHist(){
+  const v = $("v-hist"); const s = sorted().reverse();
+  if(!s.length){ v.innerHTML = `<div class="card empty"><b>Nessuna sessione</b>Le sessioni di test compariranno qui, la più recente in alto. Aggiungi la prima dalla scheda Nuovo.</div>`; return; }
+  const remind = backupDue() ? `<div class="banner" style="margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Ci sono dati non salvati in un backup. Esporta un CSV per non perderli se cambi telefono.</span><button class="btn small" data-act="backup">Backup</button></div>` : "";
+  v.innerHTML = remind + s.map((x,i) => {
+    const prev = s[i+1];
+    const cell = (m, val) => `<div class="m"><small>${m.n}</small><b>${val==null?"–":(m.time?fmt(val):val)}</b>${prev?delta(val, m.get(prev), m):""}</div>`;
+    const confirm = pendingDelete===x.id ? `<div class="confirm">Eliminare definitivamente questa sessione?<div class="row"><button class="btn small danger" data-act="del-yes" data-id="${x.id}">Elimina</button><button class="btn small ghost" data-act="del-no">Annulla</button></div></div>` : "";
+    return `<article class="card">
+      <div class="sess-head"><div><h3>${esc(x.label)}</h3><div class="d">${fmtDate(x.date)}</div></div>
+        <div class="row"><button class="btn small ghost" data-act="edit" data-id="${x.id}">Modifica</button><button class="btn small ghost" data-act="del" data-id="${x.id}">Elimina</button></div></div>
+      <div class="metrics">
+        ${cell(METRICS[1], x.t3000)}${cell(METRICS[0], split3000(x))}
+        <div class="m"><small>FC 3000 fine → 3'</small><b>${hrRec(x.hr3000end,x.hr3000rec)}</b></div>
+        ${cell(METRICS[2], x.t500)}
+        <div class="m"><small>FC 500 fine → 3'</small><b>${hrRec(x.hr500end,x.hr500rec)}</b></div>
+        ${cell(METRICS[3], x.pushups)}${cell(METRICS[4], x.abs)}${cell(METRICS[5], x.squats)}${cell(METRICS[6], x.lumbar)}
+      </div>
+      ${x.note?`<p class="hint" style="margin:10px 0 0">${esc(x.note)}</p>`:""}
+      ${confirm}
+    </article>`;
+  }).join("");
+}
+$("v-hist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-act]"); if(!b) return;
+  const a = b.dataset.act, id = b.dataset.id;
+  if(a==="backup"){ showView("prof"); return; }
+  if(a==="edit") editSession(id);
+  else if(a==="del"){ pendingDelete = id; renderHist(); }
+  else if(a==="del-no"){ pendingDelete = null; renderHist(); }
+  else if(a==="del-yes"){ pendingDelete = null; try{ await deleteSession(id); toast("Sessione eliminata"); }catch(err){ toast("Eliminazione non riuscita"); } }
+});
+
+function chart(m){
+  const pts = sorted().map(s => ({d:s.date, v:m.get(s)})).filter(p => p.v!=null);
+  if(!pts.length) return "";
+  const W=320,H=130,L=46,R=12,T=14,B=26;
+  let lo=Math.min(...pts.map(p=>p.v)), hi=Math.max(...pts.map(p=>p.v));
+  if(hi-lo < (m.time?2:2)){ const c=(hi+lo)/2; lo=c-(m.time?1:1); hi=c+(m.time?1:1); }
+  const pad=(hi-lo)*0.15; lo-=pad; hi+=pad;
+  const x = i => pts.length===1 ? (L+W-R)/2 : L + i*(W-L-R)/(pts.length-1);
+  const y = v => T + (hi-v)/(hi-lo)*(H-T-B);
+  const lab = v => m.time ? fmt(v) : Math.round(v);
+  const ticks = [hi-pad, (hi+lo)/2, lo+pad];
+  const line = pts.map((p,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join("");
+  const area = pts.length>1 ? `${line}L${x(pts.length-1).toFixed(1)},${H-B}L${x(0).toFixed(1)},${H-B}Z` : "";
+  const last = pts[pts.length-1], first = pts[0];
+  return `<div class="card"><h2>${m.n}</h2><p class="hint">${m.lower?"Più basso è meglio":"Più alto è meglio"} · ultimo <b style="font-family:var(--mono);color:var(--ink)">${lab(last.v)}</b>${pts.length>1?" "+delta(last.v, first.v, m)+" dal primo":""}</p>
+  <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${m.n}">
+    ${ticks.map(t=>`<line x1="${L}" x2="${W-R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${(y(t)+4).toFixed(1)}" text-anchor="end">${lab(t)}</text>`).join("")}
+    ${area?`<path d="${area}" fill="var(--soft)" stroke="none"/>`:""}
+    <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+    ${pts.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${i===pts.length-1?4.5:3}" fill="${i===pts.length-1?"var(--accent)":"var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`).join("")}
+    ${pts.map((p,i)=> (pts.length<=6 || i===0 || i===pts.length-1) ? `<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${new Date(p.d+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"})}</text>`:"").join("")}
+  </svg></div>`;
+}
+function renderTrend(){
+  const v = $("v-trend");
+  if(!sessions.length){ v.innerHTML = `<div class="card empty"><b>Ancora nessun dato</b>Dopo il primo test vedrai qui l'andamento di ogni prova, sessione dopo sessione.</div>`; return; }
+  v.innerHTML = METRICS.filter(m=>m.k!=="t3000").map(chart).join("");
+}
+
+function renderProf(){
+  if(document.activeElement && document.activeElement.closest && document.activeElement.closest("#v-prof .grid")) {} else {
+    $("pName").value = profile.name || ""; $("pYear").value = profile.birthYear || ""; $("pSex").value = profile.sex || "";
+  }
+  const fc = hrMax(); const s = sorted(); const lastSplit = [...s].reverse().map(split3000).find(v=>v!=null);
+  const sex = profile.sex;
+  const rows = [
+    ["FC massima (220 − età + 10)", fc ? fc + " bpm" : "inserisci anno"],
+    ["FC di lavoro 75%", fc ? Math.round(fc*0.75) + " bpm" : "–"],
+    ["Passo test 3000 /500", lastSplit ? fmt(lastSplit) : "dopo il test"],
+    ["Passo 2×4 km (−5\")", lastSplit ? fmt(lastSplit-5) : "–"],
+  ];
+  if(sex) rows.push(["Kettlebell accosciate / tirate", sex==="F"?"12 kg":"16 kg"], ["Manubri (trazioni a terra)", sex==="F"?"2 kg":"5 kg"]);
+  const lb = getLastBackup();
+  $("lastBackup").textContent = lb ? "Ultimo backup: " + new Date(lb).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"}) : "Nessun backup ancora fatto.";
+  $("appVer").textContent = "Master Ichnusa " + APP_VERSION;
+  $("params").innerHTML = rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join("");
+}
+$("saveProf").addEventListener("click", async () => {
+  const y = intOrNull($("pYear").value);
+  if($("pYear").value && (!y || y<1920 || y>new Date().getFullYear()-8)){ toast("Anno di nascita non valido"); return; }
+  try{ await saveProfile({name:$("pName").value.trim(), birthYear:y, sex:$("pSex").value}); toast("Profilo salvato"); }
+  catch(e){ toast("Salvataggio non riuscito"); }
+});
+
+$("exportBtn").addEventListener("click", async () => {
+  if(!sessions.length){ toast("Nessuna sessione da esportare"); return; }
+  const head = ["Data","Sessione","3000m tempo","3000m passo/500","FC3000 fine","FC3000 +3'","500m tempo","FC500 fine","FC500 +3'","Spinte a terra","Addominali","Accosciate 5'","Lombari","Note"];
+  const q = v => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+  const lines = sorted().map(s => [s.date, s.label, s.t3000?fmt(s.t3000):"", s.t3000?fmt(s.t3000/6):"", s.hr3000end, s.hr3000rec, s.t500?fmt(s.t500):"", s.hr500end, s.hr500rec, s.pushups, s.abs, s.squats, s.lumbar, s.note].map(q).join(";"));
+  const csv = "﻿" + [head.join(";"), ...lines].join("\n");
+  const name = "master-ichnusa-" + new Date().toISOString().slice(0,10) + ".csv";
+  const file = new File([csv], name, {type:"text/csv"});
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"Master Ichnusa"}); markBackup(); toast("Backup condiviso"); return; }
+  }catch(e){ if(e && e.name==="AbortError") return; }
+  const url = URL.createObjectURL(file); const a = document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  markBackup(); toast("File esportato");
+});
+
+/* importa CSV prodotto da Esporta (separatore ;) */
+function parseCSV(text){
+  const rows=[]; let row=[], f="", q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if(c==='"') q=true; else if(c===";"){ row.push(f); f=""; } else if(c==="\n"){ row.push(f); rows.push(row); row=[]; f=""; } else if(c!=="\r") f+=c; }
+  if(f!=="" || row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+$("importFile").addEventListener("change", async e => {
+  const file = e.target.files && e.target.files[0]; if(!file) return;
+  try{
+    const rows = parseCSV((await file.text()).replace(/^\ufeff/,""));
+    if(!rows.length || rows[0][0]!=="Data" || rows[0].length<13){ toast("File non riconosciuto: usa un CSV esportato da questa app"); return; }
+    let added=0, skipped=0;
+    rows.slice(1).forEach(r => {
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(r[0]||"")) return;
+      const rec = {kind:"test", date:r[0], label:r[1]||"Altro", t3000:parseTime(r[2]), hr3000end:intOrNull(r[4]), hr3000rec:intOrNull(r[5]), t500:parseTime(r[6]), hr500end:intOrNull(r[7]), hr500rec:intOrNull(r[8]), pushups:intOrNull(r[9]), abs:intOrNull(r[10]), squats:intOrNull(r[11]), lumbar:intOrNull(r[12]), note:r[13]||"", updatedAt:new Date().toISOString()};
+      const dup = sessions.some(s => s.date===rec.date && s.label===rec.label && s.t3000===rec.t3000 && s.t500===rec.t500);
+      if(dup){ skipped++; return; }
+      rec.id = "s" + Date.now() + "-" + added; sessions.push(rec); added++;
+    });
+    lsSave(); renderAll(); toast((added===1?"Importata 1 sessione":`Importate ${added} sessioni`) + (skipped?`, ${skipped} già presenti`:""));
+  }catch(err){ toast("Importazione non riuscita"); }
+  finally{ e.target.value=""; }
+});
+
+
+function getLastBackup(){ try{ return localStorage.getItem(LS+".backup"); }catch(e){ return null; } }
+function markBackup(){ try{ localStorage.setItem(LS+".backup", new Date().toISOString()); }catch(e){} renderAll(); }
+function backupDue(){
+  if(!sessions.length) return false;
+  const lb = getLastBackup(); if(!lb) return true;
+  return sessions.some(x => x.updatedAt && x.updatedAt > lb);
+}
+function renderHeader(){
+  $("who").textContent = profile.name ? profile.name + " · inverno 2026/27" : "Programma invernale 2026/27";
+  const sp = [...sorted()].reverse().map(split3000).find(v=>v!=null);
+  $("lastSplit").textContent = sp ? fmt(sp) + "/500" : "–";
+  const n = nextDue(), c = $("nextChip"), st = $("nextStat");
+  if(!n){ $("nextLbl").textContent = "Prossimo test"; c.textContent = "ogni 60 gg"; st.classList.remove("warn"); return; }
+  const days = Math.ceil((n - new Date())/86400000);
+  $("nextLbl").textContent = days > 0 ? "Prossimo test tra" : "Test da fare";
+  c.textContent = days > 0 ? days + (days===1?" giorno":" giorni") : n.toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+  st.classList.toggle("warn", days <= 0);
+}
+
+/* ---------- programma allenamenti 2026/27 (dal documento dell'allenatore) ---------- */
+function progValues(){
+  const fc = hrMax(); const s = sorted(); const sp = [...s].reverse().map(split3000).find(v=>v!=null);
+  const sex = profile.sex;
+  return {
+    fc75: fc ? Math.round(fc*0.75)+" bpm" : "75% FC max (anno nel Profilo)",
+    split: sp ? fmt(sp)+"/500" : "dal test 3000",
+    split5: sp ? fmt(sp-5)+"/500" : "test 3000 − 5\"",
+    kb: sex==="F" ? "12 kg" : sex==="M" ? "16 kg" : "12 kg donne / 16 kg uomini",
+    db: sex==="F" ? "2 kg" : sex==="M" ? "5 kg" : "2 kg donne / 5 kg uomini",
+    arms: sex==="F" ? "8 / 6 / 4 kg" : sex==="M" ? "10 / 8 / 6 kg" : "uomini 10/8/6 kg · donne 8/6/4 kg"
+  };
+}
+let progData = null, progError = false, progSel = null, progBuiltFor = null;
+async function loadProgram(){
+  try{
+    const r = await fetch("programma.json", {cache:"no-cache"});
+    if(!r.ok) throw 0;
+    progData = await r.json(); progError = false;
+  }catch(e){ progError = true; }
+  progBuiltFor = null; renderProg();
+}
+function currentProgram(today){
+  const ps = (progData && progData.programmi) || [];
+  const hit = ps.find(p => p.settimane.some(w => w.dal && today >= w.dal && today <= w.al));
+  return hit || ps[ps.length-1] || null;
+}
+function fillPlaceholders(html, vals){ return html.replace(/\{(fc75|split5|split|kb|db|arms)\}/g, (m,k) => `<span class="pv" data-k="${k}"></span>`); }
+function renderProg(){
+  const v = $("v-prog"); const today = new Date().toISOString().slice(0,10);
+  if(!progData){
+    v.innerHTML = progError
+      ? `<div class="card empty"><b>Programma non disponibile</b>Apri l'app una volta con la connessione attiva: poi il programma resta consultabile anche offline.</div>`
+      : `<div class="card empty"><b>Caricamento programma…</b></div>`;
+    return;
+  }
+  const ps = progData.programmi || [];
+  if(!progSel || !ps.some(p=>p.id===progSel)){ const c = currentProgram(today); progSel = c && c.id; }
+  const prog = ps.find(p=>p.id===progSel);
+  if(!prog){ v.innerHTML = `<div class="card empty"><b>Nessun programma</b>L'allenatore non ha ancora pubblicato un programma.</div>`; return; }
+  if(progBuiltFor !== progSel){
+    const fd = d => new Date(d+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+    const picker = ps.length > 1 ? `<label>Programma<select id="progPick">${ps.map(p=>`<option value="${esc(p.id)}"${p.id===progSel?" selected":""}>${esc(p.titolo)}</option>`).join("")}</select></label>` : "";
+    v.innerHTML = `<div class="card">${picker}<h2 style="margin-top:${picker?"12px":"0"}">${esc(prog.titolo)}</h2><p class="hint">${esc(prog.sottotitolo||"")}</p>
+      <div class="info">${(prog.intro||[]).map(x=>`<div>${fillPlaceholders(x)}</div>`).join("")}</div>
+      <p class="hint" style="margin:10px 0 0">Aggiornato il ${fd(progData.aggiornato)}</p></div>` +
+      prog.settimane.map(w => {
+        const dates = w.dal ? `${fd(w.dal)} – ${fd(w.al)}` : "date non indicate nel programma";
+        const body = (w.allenamenti && w.allenamenti.length)
+          ? w.allenamenti.map(d => `<details class="day"><summary><span>${esc(d.titolo)}<small>${esc(d.sottotitolo||"")}</small></span></summary><ul>${d.voci.map(i=>`<li>${fillPlaceholders(i)}</li>`).join("")}</ul></details>`).join("")
+          : "";
+        const note = w.nota ? `<p style="margin:0">${fillPlaceholders(w.nota)}</p>` : "";
+        return `<article class="wk" data-from="${w.dal||""}" data-to="${w.al||""}"><div class="wk-head"><h2>${w.n}ª settimana</h2><span>${dates}</span></div>${note}${body}</article>`;
+      }).join("");
+    const pick = $("progPick"); if(pick) pick.addEventListener("change", e => { progSel = e.target.value; renderProg(); });
+    progBuiltFor = progSel;
+  }
+  v.querySelectorAll(".wk").forEach(el => {
+    const on = el.dataset.from && today >= el.dataset.from && today <= el.dataset.to;
+    el.classList.toggle("now", !!on);
+    const h = el.querySelector(".wk-head"); let c = h.querySelector(".now-chip");
+    if(on && !c){ c = document.createElement("span"); c.className="now-chip"; c.textContent="In corso"; h.appendChild(c); }
+    if(!on && c) c.remove();
+  });
+  const vals = progValues();
+  v.querySelectorAll(".pv").forEach(el => el.textContent = vals[el.dataset.k] || "");
+}
+function renderAll(){ renderHeader(); renderHist(); renderTrend(); renderProg(); renderProf(); }
+
+/* avvio */
+resetForm();
+let tab = "test"; try{ tab = localStorage.getItem(LS+".tab") || "test"; }catch(e){}
+showView(["test","hist","trend","prog","prof"].includes(tab) ? tab : "test");
+connect();
+loadProgram();
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+})();
+</script>
+</body>
+</html>

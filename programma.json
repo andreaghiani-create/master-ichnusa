@@ -1,0 +1,116 @@
+{
+ "aggiornato": "2026-10-13",
+ "nota_segnaposto": "Nei testi: {fc75} FC al 75%, {split} passo test 3000, {split5} passo test meno 5 secondi, {kb} kettlebell, {db} manubri, {arms} pesi braccia. Si sostituiscono con i valori di ogni atleta.",
+ "programmi": [
+  {
+   "id": "inverno-2026-blocco-1",
+   "titolo": "Inverno 2026/27 · settimane 1–5",
+   "sottotitolo": "Da metà ottobre 2026 al 4 aprile 2027 · programma su 5 settimane, 3 allenamenti a settimana",
+   "intro": [
+    "<b>Aerobico:</b> fondo, progressioni, piramidali e intervallato lungo a colpi controllati, esercizi. Remoergometro e barca.",
+    "<b>Capacità muscolari:</b> corpo libero con elastici o piccoli pesi, isometria da 20\" a 1'. Circuiti, tabata, lavoro alternato al remoergometro.",
+    "<b>Test di ingresso:</b> ven 16 ott ore 18, sab 17 e dom 18 ott ore 7. Poi ogni 60 giorni. Chi ha il cardiofrequenzimetro registri la FC a fine test e dopo 3'."
+   ],
+   "settimane": [
+    {
+     "n": 1,
+     "dal": "2026-10-19",
+     "al": "2026-11-01",
+     "nota": null,
+     "allenamenti": [
+      {
+       "titolo": "Allenamento 1",
+       "sottotitolo": "Remoergometro + circuiti",
+       "voci": [
+        "Riscaldamento: 10 spinte a terra, 20 accosciate, 20 addominali, 20 lombari, 10 saltelli · 3 giri senza recupero",
+        "Remoergometro 20' esercizi alternati a voga lunga a 18/20 colpi (1' esercizio, 1' voga lunga):<ul> <li><b>a) Stop in ripresa</b>: gambe dritte, braccia dritte oltre le ginocchia, pronti a partire col carrello; contare fino a 3 e partire. Scopo: la sequenza giusta in ripresa.</li> <li><b>b) Voga a carrello pieno</b>: spingere al massimo con le gambe, busto flesso e braccia dritte, senza stop. Scopo: sentire la spinta di gambe.</li></ul>",
+        "Remoergometro 20' a 18/20 colpi alla massima spinta · FC {fc75} · passo {split}",
+        "4 circuiti come il riscaldamento",
+        "10' allungamento"
+       ]
+      },
+      {
+       "titolo": "Allenamento 2",
+       "sottotitolo": "Remoergometro + corpo libero",
+       "voci": [
+        "Remoergometro 12': 1' esercizi e 1' lungo (due esercizi, 6' ciascuno)",
+        "20' lungo alla velocità del 1° allenamento · passo {split}",
+        "<b>Gambe 160 rip.</b> (20 per esercizio, ripetere 2 volte): accosciate con elastico con molleggio; 20 jumping jack; accosciate con kettlebell {kb} al petto con molleggio; 20 saltelli da accosciata a massima estensione, braccia in alto",
+        "<b>Pettorali 100 rip.</b> (ripetere 2 volte, 10\" tra le serie): 10 spinte mani sotto le spalle (se non riesci: mani su una panca, più è alta più è facile, oppure in ginocchio); 10 impugnatura larga; 10 impugnatura stretta; 10 a destra; 10 a sinistra",
+        "<b>Addominali 120 rip.</b> (20 per esercizio): crunch con gambe a 90°; girate a destra; girate a sinistra; sollevare le gambe con mani sotto la schiena; raggruppamenti gambe-busto; plank 50\"",
+        "<b>Trazioni 120 rip.</b> (20 per esercizio, ripetere 2 volte): proni, braccia distese sopra la testa, sollevare gambe e busto insieme; tirate al mento con kettlebell {kb}; sdraiati con manubri {db}, sollevare il petto e portare avanti i manubri a braccia a 90°",
+        "<b>Lombari 100 rip.</b> (20 per esercizio): ponte con massima estensione della schiena; proni, sollevare solo la parte alta; proni, sollevare solo piedi e gambe; proni, sollevare mani e braccia; ponte isometrico fermi 40\"",
+        "10' allungamento"
+       ]
+      },
+      {
+       "titolo": "Allenamento 3",
+       "sottotitolo": "Barca 10 km",
+       "voci": [
+        "Primi 5 km: alternare 500 m esercizi e 500 m lungo",
+        "Ultimi 5 km lunghi a 18/20 colpi"
+       ]
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "dal": "2026-11-02",
+     "al": "2026-11-08",
+     "nota": null,
+     "allenamenti": [
+      {
+       "titolo": "Allenamento 1",
+       "sottotitolo": "Remoergometro + tabata + isometria",
+       "voci": [
+        "Remoergometro 12' riscaldamento con esercizi (come sopra)",
+        "2 volte 10' alternando 1' a 24 e 1' a 20 colpi · recupero 5' a 16 colpi, movimento lento di tecnica",
+        "1 tabata: 20\" a 36 colpi e 40\" recupero, per 10'",
+        "Isometria: 7 esercizi 20\" lavoro / 15\" recupero, 5 giri, 1' recupero tra i giri: spinte a terra fermandosi vicino a terra; accosciata con schiena al muro; proni, busto sollevato e braccia avanti a V; affondo su una gamba; affondo sull'altra; plank; ponte con schiena inarcata al massimo"
+       ]
+      },
+      {
+       "titolo": "Allenamento 2",
+       "sottotitolo": "Circuito + 2×4 km + braccia",
+       "voci": [
+        "Circuito di riscaldamento, 2 volte: 10 spinte a terra staccando le mani; 30 accosciate; 20 tirate al mento con bilanciere da 8 kg o elastico; 20 skip e 20 scalciate; 15 addominali a libretto; 20 lombari proni sollevando gambe e braccia",
+        "Remoergometro 2 × 4 km a 5\" in meno del passo del test · passo {split5} · massimo 22 colpi · recupero 8' a 16 colpi lento di tecnica",
+        "Braccia al remoergometro, tabata 20\" lavoro / 10\" recupero per 5 volte ogni esercizio: bicipiti, tricipiti, deltoidi · {arms}",
+        "10' allungamento"
+       ]
+      },
+      {
+       "titolo": "Allenamento 3",
+       "sottotitolo": "Barca 10 km",
+       "voci": [
+        "5 km tecnica: 500 m esercizio e 500 m lungo",
+        "5 km intervallato: 30 colpi a 26/28 e 20 colpi di recupero"
+       ]
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "dal": null,
+     "al": null,
+     "nota": "Come la 1ª settimana. Obiettivo: ridurre i tempi, anche di poco, in remoergometro e in barca, a parità di colpi. Nel corpo libero migliorare coordinazione e velocità di esecuzione.",
+     "allenamenti": []
+    },
+    {
+     "n": 4,
+     "dal": null,
+     "al": null,
+     "nota": "Come la 2ª settimana, con gli stessi obiettivi della 3ª.",
+     "allenamenti": []
+    },
+    {
+     "n": 5,
+     "dal": null,
+     "al": null,
+     "nota": "Recupero: lavoro al 50% della 1ª settimana; nel tempo ricavato, allungamento muscolare ed elasticità.",
+     "allenamenti": []
+    }
+   ]
+  }
+ ]
+}
