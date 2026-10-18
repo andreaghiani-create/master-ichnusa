@@ -277,7 +277,8 @@ html,body{margin:0}[hidden]{display:none!important}
       <h2>Atleta</h2>
       <p class="hint">Serve per calcolare la frequenza di lavoro del programma.</p>
       <div class="grid">
-        <label class="full">Nome<input id="pName"></label>
+        <label class="full">Nome e cognome<select id="pNameSel"></select></label>
+        <label class="full" id="pNameL" hidden>Scrivi nome e cognome<input id="pName" placeholder="es. Mario Rossi"></label>
         <label>Anno di nascita<input class="num" id="pYear" inputmode="numeric" placeholder="es. 1975"></label>
         <label>Sesso<select id="pSex"><option value="">–</option><option value="M">Uomo</option><option value="F">Donna</option></select></label>
       </div>
@@ -320,7 +321,7 @@ html,body{margin:0}[hidden]{display:none!important}
 (() => {
 const $ = id => document.getElementById(id);
 const LS = "registroTest.v1";
-const APP_VERSION = "2.0 · 18 ottobre 2026";
+const APP_VERSION = "2.1 · 18 ottobre 2026";
 let db = null, coll = null, uid = null, mode = "local";
 let workouts = [], editingWoId = null, newMode = "test", histMode = "test";
 let sessions = [], profile = {}, editingId = null, pendingDelete = null;
@@ -537,7 +538,7 @@ function fillAthSel(id, keep){
 ["tAth","wAth"].forEach(id => $(id).addEventListener("change", e => { $(id+"NewL").hidden = e.target.value !== "__new"; if(e.target.value==="__new") $(id+"New").focus(); }));
 function chosenAthlete(id){
   const v = $(id).value;
-  if(v === "__new") return $(id+"New").value.trim() || null;
+  if(v === "__new") return canonName($(id+"New").value) || null;
   return v; // "" = io
 }
 
@@ -675,7 +676,7 @@ function renderTrend(){}
 
 function renderProf(){
   if(document.activeElement && document.activeElement.closest && document.activeElement.closest("#v-prof .grid")) {} else {
-    $("pName").value = profile.name || ""; $("pYear").value = profile.birthYear || ""; $("pSex").value = profile.sex || "";
+    fillNameSel(); $("pYear").value = profile.birthYear || ""; $("pSex").value = profile.sex || "";
   }
   const fc = hrMax(); const s = sorted(); const lastSplit = [...s].reverse().map(split3000).find(v=>v!=null);
   const sex = profile.sex;
@@ -694,7 +695,8 @@ function renderProf(){
 $("saveProf").addEventListener("click", async () => {
   const y = intOrNull($("pYear").value);
   if($("pYear").value && (!y || y<1920 || y>new Date().getFullYear()-8)){ toast("Anno di nascita non valido"); return; }
-  try{ await saveProfile({name:$("pName").value.trim(), birthYear:y, sex:$("pSex").value}); toast("Profilo salvato"); }
+  const nm = $("pNameSel").value === "__new" ? canonName($("pName").value) : $("pNameSel").value;
+  try{ await saveProfile({name:nm, birthYear:y, sex:$("pSex").value}); toast("Profilo salvato"); }
   catch(e){ toast("Salvataggio non riuscito"); }
 });
 
@@ -890,6 +892,31 @@ function shareBanner(){
 }
 window.addEventListener("online", () => syncAll());
 
+/* ---------- nome atleta: scelto dall'elenco della squadra ---------- */
+const nameKey = n => String(n||"").replace(/\s+/g," ").trim().toLowerCase();
+function roster(){ const td = (teamCache && teamCache.data) || teamLast; return (td && !td.example && td.athletes) || []; }
+function canonName(n){
+  const k = nameKey(n); if(!k) return "";
+  const hit = roster().find(r => nameKey(r) === k); if(hit) return hit;
+  return k.replace(/(^|[\s'-])(\p{L})/gu, (m,a,b) => a + b.toUpperCase());
+}
+function fillNameSel(){
+  const sel = $("pNameSel"); if(!sel) return;
+  const cur = profile.name || "", list = roster().slice().sort((a,b)=>a.localeCompare(b,"it"));
+  const inList = list.some(n => n === cur);
+  sel.innerHTML = `<option value="">Scegli il tuo nome…</option>` + list.map(n=>`<option>${esc(n)}</option>`).join("") + `<option value="__new">Non sono nell'elenco…</option>`;
+  sel.value = cur ? (inList ? cur : "__new") : "";
+  $("pNameL").hidden = sel.value !== "__new";
+  if(sel.value === "__new" && document.activeElement !== $("pName")) $("pName").value = cur;
+}
+$("pNameSel").addEventListener("change", e => { $("pNameL").hidden = e.target.value !== "__new"; if(e.target.value==="__new") $("pName").focus(); });
+// chi aveva scritto il nome in modo diverso dall'elenco (es. tutto maiuscolo) viene riallineato e reinvia i propri dati
+function alignProfileName(){
+  if(!profile.name || !roster().length) return;
+  const c = canonName(profile.name);
+  if(c && c !== profile.name){ profile.name = c; sessions.concat(workouts).forEach(r => { delete r.sentAt; }); lsSave(); renderAll(); syncAll(); }
+}
+
 /* ---------- squadra ---------- */
 let teamCache = null, teamLast = null, teamSel = null, teamMode = "ath", teamRef = null;
 function exampleTeam(){
@@ -920,7 +947,7 @@ async function loadTeam(force){
     }
     catch(e){ teamCache = {error:true}; renderTeam(); return; }
   } else data = exampleTeam();
-  teamCache = {data}; teamLast = data; renderTeam(); fillAthSel("tAth"); fillAthSel("wAth");
+  teamCache = {data}; teamLast = data; renderTeam(); fillAthSel("tAth"); fillAthSel("wAth"); if(!data.example){ alignProfileName(); fillNameSel(); }
 }
 function teamAll(){
   const td = teamCache && teamCache.data; if(!td) return {workouts:[], tests:[]};
@@ -1003,7 +1030,7 @@ $("wipeYes").addEventListener("click", () => {
   sessions = []; profile = {}; workouts = []; others = []; delq = [];
   try{ localStorage.removeItem(LS); localStorage.removeItem(LS+".backup"); }catch(e){}
   $("wipeConfirm").hidden = true; $("wipeBtn").hidden = false;
-  $("pName").value = ""; $("pYear").value = ""; $("pSex").value = "";
+  $("pName").value = ""; fillNameSel(); $("pYear").value = ""; $("pSex").value = "";
   resetForm(); resetWoForm(); renderAll(); toast("Dati cancellati");
 });
 /* avvio */
