@@ -122,6 +122,13 @@ details.day summary small{display:block;color:var(--muted);font-weight:500;font-
 .pv{font:700 14px var(--mono);background:var(--soft);border-radius:6px;padding:1px 6px;white-space:nowrap}
 .info{display:grid;gap:6px;font-size:15px}
 .info b{font-weight:600}
+/* selettore Test / Allenamento */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--soft);border-radius:12px;padding:4px}
+.seg button{appearance:none;border:0;border-radius:9px;padding:9px 6px;font:600 15px var(--body);background:transparent;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(20,15,60,.15)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tag{display:inline-block;border-radius:6px;padding:1px 7px;font:600 12px var(--body);background:var(--soft);color:var(--ink);margin-right:6px}
+.day .log{margin:10px 0 4px}
 .confirm{background:var(--soft);border-radius:10px;padding:10px;margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:14px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 html,body{margin:0}[hidden]{display:none!important}
@@ -148,6 +155,7 @@ html,body{margin:0}[hidden]{display:none!important}
 
   <!-- NUOVO TEST -->
   <section class="view" id="v-test">
+    <div class="seg" id="newSeg"><button type="button" data-mode="test" aria-pressed="true">Test</button><button type="button" data-mode="wo" aria-pressed="false">Allenamento</button></div>
     <form id="f" class="view" autocomplete="off" novalidate>
       <div class="card">
         <h2 id="formTitle">Nuova sessione</h2>
@@ -196,6 +204,34 @@ html,body{margin:0}[hidden]{display:none!important}
       <button class="btn" type="submit" id="saveBtn">Salva sessione</button>
       <button class="btn ghost" type="button" id="cancelEdit" hidden>Annulla modifica</button>
     </form>
+
+    <form id="fw" class="view" autocomplete="off" novalidate hidden>
+      <div class="card">
+        <h2 id="woTitle">Nuovo allenamento</h2>
+        <p class="hint">Registra il lavoro svolto: tempo, FC a fine lavoro e dopo 3'.</p>
+        <div class="grid">
+          <label>Data<input type="date" id="wDate"></label>
+          <label>Tipo<select id="wType"><option>Remoergometro</option><option>Barca</option><option>Corpo libero</option><option>Altro</option></select></label>
+          <label class="full">Allenamento del programma<select id="wRef"><option value="">Libero / non dal programma</option></select></label>
+          <label class="full">Lavoro svolto<input id="wLabel" placeholder="es. 20' a 18/20 colpi"></label>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Tempi e frequenza</h2>
+        <p class="hint">Per il tempo digita solo le cifre, come nei test: 20000 diventa 20:00.0.</p>
+        <div class="grid">
+          <label class="full">Tempo<input class="num" id="wTime" inputmode="numeric" placeholder="es. 20000 → 20:00.0" autocomplete="off"></label>
+          <label>Distanza (m)<input class="num" id="wDist" inputmode="numeric" placeholder="es. 4361"></label>
+          <label>Colpi medi<input class="num" id="wSpm" inputmode="numeric" placeholder="colpi/min"></label>
+          <label>FC fine lavoro<input class="num" id="wHrEnd" inputmode="numeric" placeholder="bpm"></label>
+          <label>FC dopo 3'<input class="num" id="wHrRec" inputmode="numeric" placeholder="bpm"></label>
+        </div>
+        <div class="lcd"><span>Passo medio /500 m</span><b id="wSplit">–:––.–</b></div>
+        <label style="margin-top:12px">Note<textarea id="wNote" placeholder="Sensazioni, condizioni del mare, esercizi"></textarea></label>
+      </div>
+      <button class="btn" type="submit" id="wSave">Salva allenamento</button>
+      <button class="btn ghost" type="button" id="wCancel" hidden>Annulla modifica</button>
+    </form>
   </section>
 
   <!-- STORICO -->
@@ -231,6 +267,14 @@ html,body{margin:0}[hidden]{display:none!important}
       <div class="row"><button class="btn ghost" type="button" id="exportBtn">Esporta CSV</button></div>
       <label style="margin-top:12px">Importa da CSV esportato<input type="file" id="importFile" accept=".csv,text/csv"></label>
     </div>
+    <div class="card">
+      <h2>Cancella dati</h2>
+      <p class="hint">Elimina da questo telefono profilo, test, allenamenti e data dell'ultimo backup. Utile dopo una prova. Non si può annullare.</p>
+      <button class="btn ghost" type="button" id="wipeBtn">Cancella tutti i dati</button>
+      <div class="confirm" id="wipeConfirm" hidden>Confermi? Verranno eliminate tutte le sessioni e il profilo. Se ti servono, esporta prima il CSV.
+        <div class="row"><button class="btn small danger" type="button" id="wipeYes">Elimina tutto</button><button class="btn small ghost" type="button" id="wipeNo">Annulla</button></div>
+      </div>
+    </div>
     <p class="hint" style="text-align:center;margin:4px 0 0" id="appVer"></p>
   </section>
 </div>
@@ -248,8 +292,9 @@ html,body{margin:0}[hidden]{display:none!important}
 (() => {
 const $ = id => document.getElementById(id);
 const LS = "registroTest.v1";
-const APP_VERSION = "1.4 · 13 ottobre 2026";
+const APP_VERSION = "1.7 · 18 ottobre 2026";
 let db = null, coll = null, uid = null, mode = "local";
+let workouts = [], editingWoId = null, newMode = "test", histMode = "test";
 let sessions = [], profile = {}, editingId = null, pendingDelete = null;
 
 /* ---------- utilità tempi ---------- */
@@ -274,8 +319,10 @@ const split3000 = s => s && s.t3000 ? s.t3000/6 : null;
 const fmtDate = d => d ? new Date(d+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}) : "";
 
 /* ---------- archiviazione (solo su questo dispositivo) ---------- */
-function lsLoad(){ try{ const o = JSON.parse(localStorage.getItem(LS)||"{}"); sessions = o.sessions||[]; profile = o.profile||{}; }catch(e){} }
-function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify({sessions, profile})); return true; }catch(e){ return false; } }
+function lsLoad(){ try{ const o = JSON.parse(localStorage.getItem(LS)||"{}"); sessions = o.sessions||[]; profile = o.profile||{}; workouts = o.workouts||[]; }catch(e){} }
+function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify({sessions, profile, workouts})); return true; }catch(e){ return false; } }
+async function saveWorkout(rec){ const i = workouts.findIndex(x=>x.id===rec.id); if(i>=0) workouts[i]=rec; else workouts.push(rec); if(!lsSave()) throw {code:"storage"}; renderAll(); }
+async function deleteWorkout(id){ workouts = workouts.filter(x=>x.id!==id); lsSave(); renderAll(); }
 async function saveSession(rec){ const i = sessions.findIndex(x=>x.id===rec.id); if(i>=0) sessions[i]=rec; else sessions.push(rec); if(!lsSave()) throw {code:"storage"}; renderAll(); }
 async function deleteSession(id){ sessions = sessions.filter(x=>x.id!==id); lsSave(); renderAll(); }
 async function saveProfile(p){ profile = p; if(!lsSave()) throw {code:"storage"}; renderAll(); }
@@ -318,7 +365,7 @@ function fmtDigits(d){
   if(rest.length <= 2) return (rest || "0") + "." + t;
   return rest.slice(0,-2) + ":" + rest.slice(-2) + "." + t;
 }
-["t3000","t500"].forEach(id => $(id).addEventListener("input", e => { e.target.value = fmtDigits(e.target.value); if(id==="t3000") updateLive(); }));
+["t3000","t500","wTime"].forEach(id => $(id).addEventListener("input", e => { e.target.value = fmtDigits(e.target.value); if(id==="t3000") updateLive(); if(id==="wTime") updateWoLive(); }));
 
 $("cancelEdit").addEventListener("click", resetForm);
 
@@ -349,6 +396,82 @@ function editSession(id){
   updateLive(); showView("test");
 }
 
+
+/* ---------- allenamenti ---------- */
+function setNewMode(m){
+  newMode = m;
+  document.querySelectorAll("#newSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode===m));
+  $("f").hidden = m!=="test"; $("fw").hidden = m!=="wo";
+}
+document.querySelectorAll("#newSeg button").forEach(b => b.addEventListener("click", () => setNewMode(b.dataset.mode)));
+function woSplit(w){ return (w && w.time && w.dist) ? w.time / w.dist * 500 : null; }
+function updateWoLive(){
+  const t = parseTime($("wTime").value), d = intOrNull($("wDist").value);
+  $("wSplit").textContent = (t && d) ? fmt(t/d*500) : "–:––.–";
+}
+$("wDist").addEventListener("input", updateWoLive);
+function guessType(sub){ sub = (sub||"").toLowerCase(); return sub.includes("barca") ? "Barca" : sub.includes("remoergometro") ? "Remoergometro" : sub.includes("corpo libero") ? "Corpo libero" : "Altro"; }
+function progOptions(){
+  const ps = (progData && progData.programmi) || []; const out = [];
+  ps.forEach(p => p.settimane.forEach(w => (w.allenamenti||[]).forEach((a,i) => out.push({
+    v: `${p.id}|${w.n}|${i}`, label: `${w.n}ª sett. · ${a.titolo} · ${a.sottotitolo||""}`, sub: a.sottotitolo||"", prog: p.titolo, dal: w.dal, al: w.al }))));
+  return out;
+}
+function fillRefSelect(keep){
+  const sel = $("wRef"), cur = keep !== undefined ? keep : sel.value;
+  const opts = progOptions(); const today = new Date().toISOString().slice(0,10);
+  const groups = {}; opts.forEach(o => (groups[o.prog] = groups[o.prog] || []).push(o));
+  sel.innerHTML = `<option value="">Libero / non dal programma</option>` + Object.keys(groups).map(g =>
+    `<optgroup label="${esc(g)}">${groups[g].map(o => `<option value="${esc(o.v)}">${esc(o.label)}${o.dal && today>=o.dal && today<=o.al ? " ◂ in corso" : ""}</option>`).join("")}</optgroup>`).join("");
+  if(cur && !opts.some(o=>o.v===cur)){ const w = workouts.find(x=>x.ref===cur); if(w) sel.insertAdjacentHTML("beforeend", `<option value="${esc(cur)}">${esc(w.refLabel||cur)}</option>`); }
+  sel.value = cur || "";
+}
+$("wRef").addEventListener("change", e => {
+  const o = progOptions().find(x => x.v === e.target.value);
+  if(o) $("wType").value = guessType(o.sub);
+});
+function resetWoForm(){
+  $("fw").reset(); editingWoId = null;
+  $("wDate").value = new Date().toISOString().slice(0,10);
+  fillRefSelect("");
+  $("woTitle").textContent = "Nuovo allenamento"; $("wSave").textContent = "Salva allenamento"; $("wCancel").hidden = true;
+  updateWoLive();
+}
+$("wCancel").addEventListener("click", resetWoForm);
+$("fw").addEventListener("submit", async e => {
+  e.preventDefault();
+  const time = parseTime($("wTime").value);
+  if($("wTime").value.trim() && !time){ toast("Tempo non valido: controlla i secondi (massimo 59)"); return; }
+  if(!$("wDate").value){ toast("Inserisci la data"); return; }
+  const refSel = $("wRef"); const refOpt = refSel.options[refSel.selectedIndex];
+  const rec = { kind:"workout", id: editingWoId || ("w" + Date.now()), date: $("wDate").value, type: $("wType").value,
+    ref: refSel.value, refLabel: refSel.value ? refOpt.textContent.replace(" ◂ in corso","") : "",
+    label: $("wLabel").value.trim(), time, dist: intOrNull($("wDist").value), spm: intOrNull($("wSpm").value),
+    hrEnd: intOrNull($("wHrEnd").value), hrRec: intOrNull($("wHrRec").value), note: $("wNote").value.trim(), updatedAt: new Date().toISOString() };
+  const has = rec.time || rec.dist || rec.hrEnd != null || rec.hrRec != null || rec.label || rec.ref;
+  if(!has){ toast("Inserisci almeno il lavoro svolto o un dato"); return; }
+  if(rec.hrEnd != null && rec.hrRec != null && rec.hrRec > rec.hrEnd){ toast("La FC dopo 3' è più alta di quella a fine lavoro: controlla i valori"); return; }
+  $("wSave").disabled = true;
+  try{ await saveWorkout(rec); toast(editingWoId ? "Allenamento aggiornato" : "Allenamento salvato"); resetWoForm(); histMode = "wo"; renderHist(); showView("hist"); }
+  catch(err){ toast(err && err.code==="storage" ? "Memoria del browser non disponibile: esci dalla navigazione privata" : "Salvataggio non riuscito, riprova"); }
+  finally{ $("wSave").disabled = false; }
+});
+function editWorkout(id){
+  const w = workouts.find(x=>x.id===id); if(!w) return;
+  editingWoId = id;
+  $("wDate").value = w.date; $("wType").value = w.type || "Altro"; fillRefSelect(w.ref || "");
+  $("wLabel").value = w.label || ""; $("wTime").value = w.time ? fmt(w.time) : ""; $("wDist").value = w.dist ?? "";
+  $("wSpm").value = w.spm ?? ""; $("wHrEnd").value = w.hrEnd ?? ""; $("wHrRec").value = w.hrRec ?? ""; $("wNote").value = w.note || "";
+  $("woTitle").textContent = "Modifica allenamento"; $("wSave").textContent = "Salva modifiche"; $("wCancel").hidden = false;
+  updateWoLive(); setNewMode("wo"); showView("test");
+}
+function logFromProgram(ref){
+  resetWoForm(); fillRefSelect(ref);
+  const o = progOptions().find(x => x.v === ref); if(o) $("wType").value = guessType(o.sub);
+  setNewMode("wo"); showView("test");
+}
+const sortedWo = () => workouts.slice().sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:(a.updatedAt<b.updatedAt?-1:1));
+
 /* ---------- calcoli ---------- */
 const sorted = () => sessions.slice().sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:0);
 function hrMax(){ const y = parseInt(profile.birthYear,10); if(!y) return null; const age = new Date().getFullYear() - y; return 220 - age + 10; }
@@ -377,10 +500,13 @@ function delta(cur, prev, m){
 function hrRec(end, rec){ return (end!=null && rec!=null) ? `${end} → ${rec} <i class="up">−${end-rec}</i>` : (end!=null? String(end) : "–"); }
 
 function renderHist(){
-  const v = $("v-hist"); const s = sorted().reverse();
-  if(!s.length){ v.innerHTML = `<div class="card empty"><b>Nessuna sessione</b>Le sessioni di test compariranno qui, la più recente in alto. Aggiungi la prima dalla scheda Nuovo.</div>`; return; }
+  const v = $("v-hist");
+  const seg = `<div class="seg" id="histSeg"><button type="button" data-hm="test" aria-pressed="${histMode==="test"}">Test (${sessions.length})</button><button type="button" data-hm="wo" aria-pressed="${histMode==="wo"}">Allenamenti (${workouts.length})</button></div>`;
   const remind = backupDue() ? `<div class="banner" style="margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Ci sono dati non salvati in un backup. Esporta un CSV per non perderli se cambi telefono.</span><button class="btn small" data-act="backup">Backup</button></div>` : "";
-  v.innerHTML = remind + s.map((x,i) => {
+  if(histMode === "wo"){ v.innerHTML = seg + remind + renderWoList(); return; }
+  const s = sorted().reverse();
+  if(!s.length){ v.innerHTML = seg + `<div class="card empty"><b>Nessuna sessione</b>Le sessioni di test compariranno qui, la più recente in alto. Aggiungi la prima dalla scheda Nuovo.</div>`; return; }
+  v.innerHTML = seg + remind + s.map((x,i) => {
     const prev = s[i+1];
     const cell = (m, val) => `<div class="m"><small>${m.n}</small><b>${val==null?"–":(m.time?fmt(val):val)}</b>${prev?delta(val, m.get(prev), m):""}</div>`;
     const confirm = pendingDelete===x.id ? `<div class="confirm">Eliminare definitivamente questa sessione?<div class="row"><button class="btn small danger" data-act="del-yes" data-id="${x.id}">Elimina</button><button class="btn small ghost" data-act="del-no">Annulla</button></div></div>` : "";
@@ -399,10 +525,37 @@ function renderHist(){
     </article>`;
   }).join("");
 }
+function renderWoList(){
+  const list = sortedWo().reverse();
+  if(!list.length) return `<div class="card empty"><b>Nessun allenamento</b>Registra il primo da Nuovo → Allenamento, oppure dal pulsante "Registra" sotto ogni allenamento nella scheda Programma.</div>`;
+  return list.map(w => {
+    const sp = woSplit(w);
+    const confirm = pendingDelete===w.id ? `<div class="confirm">Eliminare definitivamente questo allenamento?<div class="row"><button class="btn small danger" data-act="wdel-yes" data-id="${w.id}">Elimina</button><button class="btn small ghost" data-act="del-no">Annulla</button></div></div>` : "";
+    const title = w.label || (w.refLabel ? w.refLabel.split(" · ").slice(0,2).join(" · ") : w.type);
+    return `<article class="card">
+      <div class="sess-head"><div><h3>${esc(title)}</h3><div class="d"><span class="tag">${esc(w.type||"")}</span>${fmtDate(w.date)}</div></div>
+        <div class="row"><button class="btn small ghost" data-act="wedit" data-id="${w.id}">Modifica</button><button class="btn small ghost" data-act="wdel" data-id="${w.id}">Elimina</button></div></div>
+      ${w.refLabel && w.label ? `<p class="hint" style="margin:-4px 0 8px">${esc(w.refLabel)}</p>` : ""}
+      <div class="metrics">
+        <div class="m"><small>Tempo</small><b>${w.time ? fmt(w.time) : "–"}</b></div>
+        <div class="m"><small>Distanza</small><b>${w.dist ? w.dist.toLocaleString("it-IT") + " m" : "–"}</b></div>
+        <div class="m"><small>Passo /500</small><b>${sp ? fmt(sp) : "–"}</b></div>
+        <div class="m"><small>Colpi medi</small><b>${w.spm ?? "–"}</b></div>
+        <div class="m" style="grid-column:1/-1"><small>FC fine → dopo 3'</small><b>${hrRec(w.hrEnd, w.hrRec)}</b></div>
+      </div>
+      ${w.note?`<p class="hint" style="margin:10px 0 0">${esc(w.note)}</p>`:""}
+      ${confirm}
+    </article>`;
+  }).join("");
+}
+$("v-hist").addEventListener("click", e => { const h = e.target.closest("button[data-hm]"); if(h){ histMode = h.dataset.hm; pendingDelete = null; renderHist(); } });
 $("v-hist").addEventListener("click", async e => {
   const b = e.target.closest("button[data-act]"); if(!b) return;
   const a = b.dataset.act, id = b.dataset.id;
   if(a==="backup"){ showView("prof"); return; }
+  if(a==="wedit"){ editWorkout(id); return; }
+  if(a==="wdel"){ pendingDelete = id; renderHist(); return; }
+  if(a==="wdel-yes"){ pendingDelete = null; try{ await deleteWorkout(id); toast("Allenamento eliminato"); }catch(err){ toast("Eliminazione non riuscita"); } return; }
   if(a==="edit") editSession(id);
   else if(a==="del"){ pendingDelete = id; renderHist(); }
   else if(a==="del-no"){ pendingDelete = null; renderHist(); }
@@ -464,10 +617,11 @@ $("saveProf").addEventListener("click", async () => {
 });
 
 $("exportBtn").addEventListener("click", async () => {
-  if(!sessions.length){ toast("Nessuna sessione da esportare"); return; }
-  const head = ["Data","Sessione","3000m tempo","3000m passo/500","FC3000 fine","FC3000 +3'","500m tempo","FC500 fine","FC500 +3'","Spinte a terra","Addominali","Accosciate 5'","Lombari","Note"];
+  if(!sessions.length && !workouts.length){ toast("Nessun dato da esportare"); return; }
+  const head = ["Record","Data","Sessione / lavoro","3000m tempo","3000m passo/500","FC3000 fine","FC3000 +3'","500m tempo","FC500 fine","FC500 +3'","Spinte a terra","Addominali","Accosciate 5'","Lombari","Note","Tipo allenamento","Programma","Tempo","Distanza m","Passo/500","Colpi medi","FC fine","FC +3'"];
   const q = v => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
-  const lines = sorted().map(s => [s.date, s.label, s.t3000?fmt(s.t3000):"", s.t3000?fmt(s.t3000/6):"", s.hr3000end, s.hr3000rec, s.t500?fmt(s.t500):"", s.hr500end, s.hr500rec, s.pushups, s.abs, s.squats, s.lumbar, s.note].map(q).join(";"));
+  const lines = sorted().map(s => ["Test", s.date, s.label, s.t3000?fmt(s.t3000):"", s.t3000?fmt(s.t3000/6):"", s.hr3000end, s.hr3000rec, s.t500?fmt(s.t500):"", s.hr500end, s.hr500rec, s.pushups, s.abs, s.squats, s.lumbar, s.note, "", "", "", "", "", "", "", ""].map(q).join(";"))
+    .concat(sortedWo().map(w => ["Allenamento", w.date, w.label, "", "", "", "", "", "", "", "", "", "", "", w.note, w.type, w.refLabel, w.time?fmt(w.time):"", w.dist, woSplit(w)?fmt(woSplit(w)):"", w.spm, w.hrEnd, w.hrRec].map(q).join(";")));
   const csv = "﻿" + [head.join(";"), ...lines].join("\n");
   const name = "master-ichnusa-" + new Date().toISOString().slice(0,10) + ".csv";
   const file = new File([csv], name, {type:"text/csv"});
@@ -491,15 +645,24 @@ $("importFile").addEventListener("change", async e => {
   const file = e.target.files && e.target.files[0]; if(!file) return;
   try{
     const rows = parseCSV((await file.text()).replace(/^\ufeff/,""));
-    if(!rows.length || rows[0][0]!=="Data" || rows[0].length<13){ toast("File non riconosciuto: usa un CSV esportato da questa app"); return; }
-    let added=0, skipped=0;
-    rows.slice(1).forEach(r => {
+    const hdr = rows.length ? rows[0][0] : "";
+    if(hdr!=="Data" && hdr!=="Record"){ toast("File non riconosciuto: usa un CSV esportato da questa app"); return; }
+    const off = hdr==="Record" ? 1 : 0;
+    let added=0, addedW=0, skipped=0;
+    rows.slice(1).forEach(r0 => {
+      const kind = off ? r0[0] : "Test"; const r = off ? r0.slice(1) : r0;
       if(!/^\d{4}-\d{2}-\d{2}$/.test(r[0]||"")) return;
+      if(kind === "Allenamento"){
+        const w = {kind:"workout", date:r[0], label:r[1]||"", note:r[13]||"", type:r[14]||"Altro", refLabel:r[15]||"", ref:"", time:parseTime(r[16]), dist:intOrNull(r[17]), spm:intOrNull(r[19]), hrEnd:intOrNull(r[20]), hrRec:intOrNull(r[21]), updatedAt:new Date().toISOString()};
+        if(workouts.some(x => x.date===w.date && x.label===w.label && x.time===w.time && x.hrEnd===w.hrEnd)){ skipped++; return; }
+        w.id = "w" + Date.now() + "-" + addedW; workouts.push(w); addedW++; return;
+      }
       const rec = {kind:"test", date:r[0], label:r[1]||"Altro", t3000:parseTime(r[2]), hr3000end:intOrNull(r[4]), hr3000rec:intOrNull(r[5]), t500:parseTime(r[6]), hr500end:intOrNull(r[7]), hr500rec:intOrNull(r[8]), pushups:intOrNull(r[9]), abs:intOrNull(r[10]), squats:intOrNull(r[11]), lumbar:intOrNull(r[12]), note:r[13]||"", updatedAt:new Date().toISOString()};
       const dup = sessions.some(s => s.date===rec.date && s.label===rec.label && s.t3000===rec.t3000 && s.t500===rec.t500);
       if(dup){ skipped++; return; }
       rec.id = "s" + Date.now() + "-" + added; sessions.push(rec); added++;
     });
+    lsSave(); renderAll(); toast(`Importati: ${added} test, ${addedW} allenament${addedW===1?"o":"i"}` + (skipped?` · ${skipped} già presenti`:"")); return;
     lsSave(); renderAll(); toast((added===1?"Importata 1 sessione":`Importate ${added} sessioni`) + (skipped?`, ${skipped} già presenti`:""));
   }catch(err){ toast("Importazione non riuscita"); }
   finally{ e.target.value=""; }
@@ -509,9 +672,9 @@ $("importFile").addEventListener("change", async e => {
 function getLastBackup(){ try{ return localStorage.getItem(LS+".backup"); }catch(e){ return null; } }
 function markBackup(){ try{ localStorage.setItem(LS+".backup", new Date().toISOString()); }catch(e){} renderAll(); }
 function backupDue(){
-  if(!sessions.length) return false;
+  if(!sessions.length && !workouts.length) return false;
   const lb = getLastBackup(); if(!lb) return true;
-  return sessions.some(x => x.updatedAt && x.updatedAt > lb);
+  return sessions.concat(workouts).some(x => x.updatedAt && x.updatedAt > lb);
 }
 function renderHeader(){
   $("who").textContent = profile.name ? profile.name + " · inverno 2026/27" : "Programma invernale 2026/27";
@@ -546,6 +709,7 @@ async function loadProgram(){
     progData = await r.json(); progError = false;
   }catch(e){ progError = true; }
   progBuiltFor = null; renderProg();
+  if(!editingWoId) fillRefSelect();
 }
 function currentProgram(today){
   const ps = (progData && progData.programmi) || [];
@@ -574,7 +738,7 @@ function renderProg(){
       prog.settimane.map(w => {
         const dates = w.dal ? `${fd(w.dal)} – ${fd(w.al)}` : "date non indicate nel programma";
         const body = (w.allenamenti && w.allenamenti.length)
-          ? w.allenamenti.map(d => `<details class="day"><summary><span>${esc(d.titolo)}<small>${esc(d.sottotitolo||"")}</small></span></summary><ul>${d.voci.map(i=>`<li>${fillPlaceholders(i)}</li>`).join("")}</ul></details>`).join("")
+          ? w.allenamenti.map((d,di) => `<details class="day"><summary><span>${esc(d.titolo)}<small>${esc(d.sottotitolo||"")}</small></span></summary><ul>${d.voci.map(i=>`<li>${fillPlaceholders(i)}</li>`).join("")}</ul><div class="log"><button type="button" class="btn small" data-log="${esc(prog.id)}|${w.n}|${di}">Registra questo allenamento</button></div></details>`).join("")
           : "";
         const note = w.nota ? `<p style="margin:0">${fillPlaceholders(w.nota)}</p>` : "";
         return `<article class="wk" data-from="${w.dal||""}" data-to="${w.al||""}"><div class="wk-head"><h2>${w.n}ª settimana</h2><span>${dates}</span></div>${note}${body}</article>`;
@@ -592,10 +756,21 @@ function renderProg(){
   const vals = progValues();
   v.querySelectorAll(".pv").forEach(el => el.textContent = vals[el.dataset.k] || "");
 }
+$("v-prog").addEventListener("click", e => { const b = e.target.closest("button[data-log]"); if(b) logFromProgram(b.dataset.log); });
 function renderAll(){ renderHeader(); renderHist(); renderTrend(); renderProg(); renderProf(); }
 
+
+$("wipeBtn").addEventListener("click", () => { $("wipeConfirm").hidden = false; $("wipeBtn").hidden = true; });
+$("wipeNo").addEventListener("click", () => { $("wipeConfirm").hidden = true; $("wipeBtn").hidden = false; });
+$("wipeYes").addEventListener("click", () => {
+  sessions = []; profile = {}; workouts = [];
+  try{ localStorage.removeItem(LS); localStorage.removeItem(LS+".backup"); }catch(e){}
+  $("wipeConfirm").hidden = true; $("wipeBtn").hidden = false;
+  $("pName").value = ""; $("pYear").value = ""; $("pSex").value = "";
+  resetForm(); resetWoForm(); renderAll(); toast("Dati cancellati");
+});
 /* avvio */
-resetForm();
+resetForm(); resetWoForm();
 let tab = "test"; try{ tab = localStorage.getItem(LS+".tab") || "test"; }catch(e){}
 showView(["test","hist","trend","prog","prof"].includes(tab) ? tab : "test");
 connect();
