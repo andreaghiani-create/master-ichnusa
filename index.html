@@ -140,6 +140,8 @@ details.day summary small{display:block;color:var(--muted);font-weight:500;font-
 .mini div{background:var(--soft);border-radius:10px;padding:6px 8px;min-width:0}
 .mini small{display:block;font-size:11px;color:var(--muted)}
 .mini b{font:700 15px var(--mono);font-variant-numeric:tabular-nums}
+.rw .mini{grid-column:1/3;margin-top:6px}
+.rw .note{grid-column:1/3;font-size:13px;color:var(--muted);font-style:italic}
 .rows{display:flex;flex-direction:column}
 .rw{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
 .rw:first-child{border-top:0}
@@ -321,7 +323,7 @@ html,body{margin:0}[hidden]{display:none!important}
 (() => {
 const $ = id => document.getElementById(id);
 const LS = "registroTest.v1";
-const APP_VERSION = "2.1 · 18 ottobre 2026";
+const APP_VERSION = "2.2 · 18 ottobre 2026";
 let db = null, coll = null, uid = null, mode = "local";
 let workouts = [], editingWoId = null, newMode = "test", histMode = "test";
 let sessions = [], profile = {}, editingId = null, pendingDelete = null;
@@ -340,7 +342,7 @@ function parseTime(s){
 }
 function fmt(sec){
   if(sec == null || !Number.isFinite(sec)) return "–";
-  const t = Math.round(sec*10)/10, m = Math.floor(t/60), s = t - m*60;
+  const t = Math.round(sec*10 + 1e-6)/10, m = Math.floor(t/60), s = t - m*60;
   return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1);
 }
 const intOrNull = v => { const n = parseInt(String(v||"").trim(),10); return Number.isFinite(n) && n >= 0 ? n : null; };
@@ -971,9 +973,9 @@ function renderTeam(){
   const all = teamAll();
   const banner = teamCache.data.example ? `<div class="banner" style="margin:0">Anteprima con <b>dati di esempio</b>: nomi e valori sono inventati. I tuoi dati e quelli inseriti per altri compaiono insieme agli esempi.</div>`
     : `<div class="row" style="justify-content:space-between;align-items:center"><span class="hint" style="margin:0">Aggiornato alle ${new Date(teamCache.data.updated||Date.now()).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span><button class="btn small ghost" data-t="reload">Aggiorna</button></div>`;
-  const seg = `<div class="seg" id="teamSeg"><button type="button" data-tm="ath" aria-pressed="${teamMode==="ath"}">Atleti</button><button type="button" data-tm="ref" aria-pressed="${teamMode==="ref"}">Per allenamento</button></div>`;
+  const seg = `<div class="seg three" id="teamSeg"><button type="button" data-tm="ath" aria-pressed="${teamMode==="ath"}">Atleti</button><button type="button" data-tm="ref" aria-pressed="${teamMode==="ref"}">Allenam.</button><button type="button" data-tm="test" aria-pressed="${teamMode==="test"}">Test</button></div>`;
   if(teamSel){ v.innerHTML = athleteDetail(teamSel, all); return; }
-  v.innerHTML = banner + seg + (teamMode==="ath" ? athleteList(all) : byWorkout(all));
+  v.innerHTML = banner + seg + (teamMode==="ath" ? athleteList(all) : teamMode==="test" ? byTest(all) : byWorkout(all));
 }
 function athleteList(all){
   const roster = (teamCache.data && teamCache.data.athletes) || [];
@@ -998,12 +1000,30 @@ function athleteDetail(n, all){
   const wp = woPts(ws);
   const list = ws.map(w => { const sp = woSplit(w); return `<div class="rw"><span class="rk"></span><span class="nm">${esc(w.refLabel ? w.refLabel.split(" · ").slice(0,2).join(" · ") : (w.label||w.type))}${w.mine&&w.by!==undefined?`<span class="mine">inserito da te</span>`:""}</span><span class="pc">${sp?fmt(sp):(w.time?fmt(w.time):"–")}</span>
       <span class="sub">${fmtDate(w.date)} · ${esc(w.type||"")}${w.dist?" · "+w.dist.toLocaleString("it-IT")+" m":""}${w.time?" · "+fmt(w.time):""} · FC ${w.hrEnd??"–"} → ${w.hrRec??"–"}${w.hrEnd!=null&&w.hrRec!=null?" (−"+(w.hrEnd-w.hrRec)+")":""}</span></div>`; }).join("");
-  const tl = ts.map(t => `<div class="rw"><span class="rk"></span><span class="nm">${esc(t.label||"Test")}</span><span class="pc">${t.t3000?fmt(t.t3000/6):"–"}</span><span class="sub">${fmtDate(t.date)} · 3000 ${t.t3000?fmt(t.t3000):"–"} · 500 ${t.t500?fmt(t.t500):"–"} · FC ${t.hr3000end??"–"} → ${t.hr3000rec??"–"}</span></div>`).join("");
+  const tl = ts.map(t => `<div class="rw"><span class="rk"></span><span class="nm">${esc(t.label||"Test")}</span><span class="pc">${t.t3000?fmt(t.t3000/6):"–"}</span><span class="sub">${fmtDate(t.date)}${t.by?" · inserito da "+esc(t.by):""}</span>${testBlock(t)}</div>`).join("");
   return `<button type="button" class="back" data-t="back">‹ Squadra</button>
     <div class="card"><h2>${esc(n)}</h2><p class="hint" style="margin:0">${ws.length} allenamenti · ${ts.length} test</p></div>
     ${chart(WO_SPLIT, wp.erg.slice())}${chart(WO_REC, wp.rec.slice())}
     <div class="card"><h2>Allenamenti</h2><p class="hint">Il numero a destra è il passo /500</p><div class="rows">${list || "<p class='hint'>Nessun allenamento.</p>"}</div></div>
     <div class="card"><h2>Test</h2><p class="hint">A destra il passo /500 sul 3000</p><div class="rows">${tl || "<p class='hint'>Nessun test.</p>"}</div></div>`;
+}
+function testBlock(t){
+  const v = x => x==null||x==="" ? "–" : x;
+  const fc = (a,b) => a==null&&b==null ? "–" : `${v(a)}→${v(b)}${a!=null&&b!=null?" <small style='display:inline'>(−"+(a-b)+")</small>":""}`;
+  const c = [["3000 m",t.t3000?fmt(t.t3000):"–"],["Passo /500",t.t3000?fmt(t.t3000/6):"–"],["FC 3000",fc(t.hr3000end,t.hr3000rec)],
+    ["500 m",t.t500?fmt(t.t500):"–"],["FC 500",fc(t.hr500end,t.hr500rec)],["Spinte a terra",v(t.pushups)],
+    ["Addominali",v(t.abs)],["Accosciate 5'",v(t.squats)],["Lombari",v(t.lumbar)]];
+  return `<div class="mini">${c.map(x=>`<div><small>${x[0]}</small><b>${x[1]}</b></div>`).join("")}</div>${t.note?`<div class="note">${esc(t.note)}</div>`:""}`;
+}
+let teamTest = null;
+function byTest(all){
+  const g = {}; all.tests.forEach(t => { const k = t.label || "Test"; (g[k] = g[k] || []).push(t); });
+  const keys = Object.keys(g).sort((a,b) => { const la = g[a].map(t=>t.date).sort().pop(), lb = g[b].map(t=>t.date).sort().pop(); return la<lb?1:-1; });
+  if(!keys.length) return `<div class="card empty"><b>Nessun test</b>Qui vedrai i risultati dei test di tutti gli atleti.</div>`;
+  if(!teamTest || !g[teamTest]) teamTest = keys[0];
+  const rows = g[teamTest].slice().sort((a,b) => a.athlete.localeCompare(b.athlete,"it") || (a.date<b.date?-1:1));
+  return `<div class="card"><label>Test<select id="teamTestSel">${keys.map(k=>`<option${k===teamTest?" selected":""}>${esc(k)}</option>`).join("")}</select></label></div>
+    <div class="card"><h2>Atleti</h2><p class="hint">In ordine alfabetico · a destra il passo /500 sul 3000</p><div class="rows">${rows.map(t=>`<div class="rw"><span class="rk"></span><span class="nm">${esc(t.athlete)}</span><span class="pc">${t.t3000?fmt(t.t3000/6):"–"}</span><span class="sub">${fmtDate(t.date)}</span>${testBlock(t)}</div>`).join("")}</div></div>`;
 }
 function byWorkout(all){
   const refs = {}; all.workouts.forEach(w => { const k = w.refLabel || (w.label ? w.type+" · "+w.label : w.type); (refs[k] = refs[k] || []).push(w); });
@@ -1020,7 +1040,7 @@ $("v-team").addEventListener("click", e => {
   const b = e.target.closest("[data-t]"); if(b){ if(b.dataset.t==="back"){ teamSel = null; renderTeam(); } if(b.dataset.t==="reload"){ teamCache = null; renderTeam(); } return; }
   const m = e.target.closest("[data-tm]"); if(m){ teamMode = m.dataset.tm; renderTeam(); }
 });
-$("v-team").addEventListener("change", e => { if(e.target.id==="teamRefSel"){ teamRef = e.target.value; renderTeam(); } });
+$("v-team").addEventListener("change", e => { if(e.target.id==="teamRefSel"){ teamRef = e.target.value; renderTeam(); } if(e.target.id==="teamTestSel"){ teamTest = e.target.value; renderTeam(); } });
 function renderAll(){ renderHeader(); renderHist(); renderTrend(); renderProg(); renderProf(); if(!$("v-team").hidden) renderTeam(); fillAthSel("tAth"); fillAthSel("wAth"); }
 
 
