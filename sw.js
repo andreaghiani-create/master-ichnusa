@@ -1,6 +1,6 @@
 // Funzionamento offline: rete prima, copia locale se non c'è connessione.
 // Cambiare il numero di versione a ogni aggiornamento dell'app (non serve per programma.json).
-const CACHE = "master-ichnusa-v9";
+const CACHE = "master-ichnusa-v11";
 const FILES = ["./", "index.html", "programma.json", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "logo.png", "icon-maskable-512.png"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });

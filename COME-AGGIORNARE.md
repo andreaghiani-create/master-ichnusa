@@ -14,3 +14,7 @@ Caricare i file ricevuti allo stesso modo (sovrascrivono i vecchi).
 ## Dati degli atleti
 Restano solo sul telefono di ciascuno e non vengono toccati dagli aggiornamenti.
 Ogni atleta può salvarli con **Profilo → Esporta CSV** e ripristinarli con **Importa da CSV**.
+
+## Collegamento al foglio della squadra
+L'app invia i dati al foglio "Master Ichnusa – Dati squadra" tramite lo script (Estensioni → Apps Script del foglio).
+Se si modifica lo script: Esegui il deployment → Gestisci deployment → modifica → Versione: Nuova versione. Così l'indirizzo resta lo stesso e l'app non va aggiornata.

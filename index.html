@@ -129,6 +129,27 @@ details.day summary small{display:block;color:var(--muted);font-weight:500;font-
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .tag{display:inline-block;border-radius:6px;padding:1px 7px;font:600 12px var(--body);background:var(--soft);color:var(--ink);margin-right:6px}
 .day .log{margin:10px 0 4px}
+.seg.three{grid-template-columns:1fr 1fr 1fr}
+.ath{appearance:none;background:none;border:0;padding:0;display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.ath:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+.ath h3{font:600 19px var(--display);text-transform:uppercase;margin:0}
+.ath .d{color:var(--muted);font-size:13px}
+.ath .go{color:var(--accent);font:700 20px var(--mono)}
+.chip.old{background:var(--gold);color:#1A1442}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.mini div{background:var(--soft);border-radius:10px;padding:6px 8px;min-width:0}
+.mini small{display:block;font-size:11px;color:var(--muted)}
+.mini b{font:700 15px var(--mono);font-variant-numeric:tabular-nums}
+.rows{display:flex;flex-direction:column}
+.rw{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
+.rw:first-child{border-top:0}
+.rw .rk{font:700 15px var(--mono);color:var(--muted);min-width:1.4em}
+.rw .nm{font-weight:600;min-width:0}
+.rw .pc{font:700 17px var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.rw .rk{display:none}
+.rw .sub{grid-column:1/3;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.back{appearance:none;border:0;background:none;color:var(--accent);font:600 15px var(--body);padding:4px 0;cursor:pointer;text-align:left}
+.mine{font-size:11px;font-weight:600;color:var(--accent);margin-left:6px}
 .confirm{background:var(--soft);border-radius:10px;padding:10px;margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:14px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 html,body{margin:0}[hidden]{display:none!important}
@@ -161,6 +182,8 @@ html,body{margin:0}[hidden]{display:none!important}
         <h2 id="formTitle">Nuova sessione</h2>
         <p class="hint">Test di ingresso 16–18 ottobre 2026, poi ogni 60 giorni.</p>
         <div class="grid">
+          <label class="full">Atleta<select id="tAth" class="athSel"></select></label>
+          <label class="full" hidden id="tAthNewL">Nome atleta<input id="tAthNew" placeholder="Nome e cognome"></label>
           <label>Data<input type="date" id="date" required></label>
           <label>Sessione<select id="label">
             <option>Test di ingresso</option><option>Test 2</option><option>Test 3</option><option>Test 4</option><option>Altro</option>
@@ -210,6 +233,8 @@ html,body{margin:0}[hidden]{display:none!important}
         <h2 id="woTitle">Nuovo allenamento</h2>
         <p class="hint">Registra il lavoro svolto: tempo, FC a fine lavoro e dopo 3'.</p>
         <div class="grid">
+          <label class="full">Atleta<select id="wAth" class="athSel"></select></label>
+          <label class="full" hidden id="wAthNewL">Nome atleta<input id="wAthNew" placeholder="Nome e cognome"></label>
           <label>Data<input type="date" id="wDate"></label>
           <label>Tipo<select id="wType"><option>Remoergometro</option><option>Barca</option><option>Corpo libero</option><option>Altro</option></select></label>
           <label class="full">Allenamento del programma<select id="wRef"><option value="">Libero / non dal programma</option></select></label>
@@ -239,6 +264,9 @@ html,body{margin:0}[hidden]{display:none!important}
 
   <!-- ANDAMENTO -->
   <section class="view" id="v-trend" hidden></section>
+
+  <!-- SQUADRA -->
+  <section class="view" id="v-team" hidden></section>
 
   <!-- PROFILO -->
   <!-- PROGRAMMA -->
@@ -282,7 +310,7 @@ html,body{margin:0}[hidden]{display:none!important}
 <nav class="tabs" role="tablist">
   <button role="tab" data-v="test" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nuovo</button>
   <button role="tab" data-v="hist" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Storico</button>
-  <button role="tab" data-v="trend" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Andamento</button>
+  <button role="tab" data-v="team" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2"/><path d="M15.5 14.6c2.6-.3 4.6 1.3 5.5 4.4"/></svg>Squadra</button>
   <button role="tab" data-v="prog" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Programma</button>
   <button role="tab" data-v="prof" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profilo</button>
 </nav>
@@ -292,7 +320,7 @@ html,body{margin:0}[hidden]{display:none!important}
 (() => {
 const $ = id => document.getElementById(id);
 const LS = "registroTest.v1";
-const APP_VERSION = "1.7 · 18 ottobre 2026";
+const APP_VERSION = "2.0 · 18 ottobre 2026";
 let db = null, coll = null, uid = null, mode = "local";
 let workouts = [], editingWoId = null, newMode = "test", histMode = "test";
 let sessions = [], profile = {}, editingId = null, pendingDelete = null;
@@ -319,13 +347,18 @@ const split3000 = s => s && s.t3000 ? s.t3000/6 : null;
 const fmtDate = d => d ? new Date(d+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}) : "";
 
 /* ---------- archiviazione (solo su questo dispositivo) ---------- */
-function lsLoad(){ try{ const o = JSON.parse(localStorage.getItem(LS)||"{}"); sessions = o.sessions||[]; profile = o.profile||{}; workouts = o.workouts||[]; }catch(e){} }
-function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify({sessions, profile, workouts})); return true; }catch(e){ return false; } }
-async function saveWorkout(rec){ const i = workouts.findIndex(x=>x.id===rec.id); if(i>=0) workouts[i]=rec; else workouts.push(rec); if(!lsSave()) throw {code:"storage"}; renderAll(); }
-async function deleteWorkout(id){ workouts = workouts.filter(x=>x.id!==id); lsSave(); renderAll(); }
-async function saveSession(rec){ const i = sessions.findIndex(x=>x.id===rec.id); if(i>=0) sessions[i]=rec; else sessions.push(rec); if(!lsSave()) throw {code:"storage"}; renderAll(); }
-async function deleteSession(id){ sessions = sessions.filter(x=>x.id!==id); lsSave(); renderAll(); }
-async function saveProfile(p){ profile = p; if(!lsSave()) throw {code:"storage"}; renderAll(); }
+function lsLoad(){ try{ const o = JSON.parse(localStorage.getItem(LS)||"{}"); sessions = o.sessions||[]; profile = o.profile||{}; workouts = o.workouts||[]; others = o.others||[]; delq = o.delq||[]; }catch(e){} }
+function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify({sessions, profile, workouts, others, delq})); return true; }catch(e){ return false; } }
+async function saveWorkout(rec){ const i = workouts.findIndex(x=>x.id===rec.id); if(i>=0){ rec.sentAt = workouts[i].sentAt; workouts[i]=rec; } else workouts.push(rec); if(!lsSave()) throw {code:"storage"}; renderAll(); syncAll(); }
+async function deleteWorkout(id){ queueDelete("workout", workouts.find(x=>x.id===id)); workouts = workouts.filter(x=>x.id!==id); lsSave(); renderAll(); syncAll(); }
+async function saveSession(rec){ const i = sessions.findIndex(x=>x.id===rec.id); if(i>=0){ rec.sentAt = sessions[i].sentAt; sessions[i]=rec; } else sessions.push(rec); if(!lsSave()) throw {code:"storage"}; renderAll(); syncAll(); }
+async function deleteSession(id){ queueDelete("test", sessions.find(x=>x.id===id)); sessions = sessions.filter(x=>x.id!==id); lsSave(); renderAll(); syncAll(); }
+async function saveProfile(p){
+  const renamed = (profile.name||"").trim() !== (p.name||"").trim();
+  profile = p;
+  if(renamed){ sessions.concat(workouts).forEach(r => { delete r.sentAt; }); }   // con il nuovo nome si reinviano le proprie righe
+  if(!lsSave()) throw {code:"storage"}; renderAll(); syncAll();
+}
 function setBanner(text){ const b=$("storeBanner"); b.textContent=text||""; b.hidden=!text; }
 async function connect(){
   lsLoad(); renderAll();
@@ -340,7 +373,8 @@ async function connect(){
 document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => showView(b.dataset.v)));
 function showView(v){
   document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.v===v));
-  ["test","hist","trend","prog","prof"].forEach(k => $("v-"+k).hidden = k!==v);
+  ["test","hist","trend","team","prog","prof"].forEach(k => $("v-"+k).hidden = k!==v);
+  if(v==="team") renderTeam();
   try{ localStorage.setItem(LS+".tab", v); }catch(e){}
   window.scrollTo(0,0);
 }
@@ -355,6 +389,7 @@ function resetForm(){
   $("label").value = sessions.length ? "Test " + Math.min(sessions.length+1,4) : "Test di ingresso";
   if(sessions.length >= 4) $("label").value = "Altro";
   $("formTitle").textContent = "Nuova sessione"; $("saveBtn").textContent = "Salva sessione"; $("cancelEdit").hidden = true;
+  fillAthSel("tAth","");
   updateLive();
 }
 function updateLive(){ const t = parseTime($("t3000").value); $("split3000").textContent = t ? fmt(t/6) : "–:––.–"; }
@@ -380,6 +415,9 @@ $("f").addEventListener("submit", async e => {
   FIELDS.forEach(k => rec[k] = intOrNull($(k).value));
   const has = rec.t3000 || rec.t500 || FIELDS.some(k => rec[k] != null);
   if(!has){ toast("Inserisci almeno un risultato"); return; }
+  const ath = chosenAthlete("tAth");
+  if(ath === null){ toast("Scrivi il nome dell'atleta"); return; }
+  if(ath){ rec.athlete = ath; rec.by = myName(); others.push(rec); if(!lsSave()){ toast("Memoria del browser non disponibile"); return; } toast("Test salvato per " + ath); resetForm(); renderAll(); syncAll(); return; }
   $("saveBtn").disabled = true;
   try{ await saveSession(rec); toast(editingId ? "Sessione aggiornata" : "Sessione salvata"); resetForm(); showView("hist"); }
   catch(err){ toast(err && err.code==="storage" ? "Memoria del browser non disponibile: esci dalla navigazione privata" : "Salvataggio non riuscito, riprova"); }
@@ -393,6 +431,7 @@ function editSession(id){
   $("t3000").value = s.t3000 ? fmt(s.t3000) : ""; $("t500").value = s.t500 ? fmt(s.t500) : "";
   FIELDS.forEach(k => $(k).value = s[k] ?? ""); $("note").value = s.note || "";
   $("formTitle").textContent = "Modifica sessione"; $("saveBtn").textContent = "Salva modifiche"; $("cancelEdit").hidden = false;
+  fillAthSel("tAth","");
   updateLive(); showView("test");
 }
 
@@ -435,6 +474,7 @@ function resetWoForm(){
   $("wDate").value = new Date().toISOString().slice(0,10);
   fillRefSelect("");
   $("woTitle").textContent = "Nuovo allenamento"; $("wSave").textContent = "Salva allenamento"; $("wCancel").hidden = true;
+  fillAthSel("wAth","");
   updateWoLive();
 }
 $("wCancel").addEventListener("click", resetWoForm);
@@ -451,6 +491,9 @@ $("fw").addEventListener("submit", async e => {
   const has = rec.time || rec.dist || rec.hrEnd != null || rec.hrRec != null || rec.label || rec.ref;
   if(!has){ toast("Inserisci almeno il lavoro svolto o un dato"); return; }
   if(rec.hrEnd != null && rec.hrRec != null && rec.hrRec > rec.hrEnd){ toast("La FC dopo 3' è più alta di quella a fine lavoro: controlla i valori"); return; }
+  const ath = chosenAthlete("wAth");
+  if(ath === null){ toast("Scrivi il nome dell'atleta"); return; }
+  if(ath && !editingWoId){ rec.athlete = ath; rec.by = myName(); others.push(rec); if(!lsSave()){ toast("Memoria del browser non disponibile"); return; } toast("Allenamento salvato per " + ath); resetWoForm(); renderAll(); syncAll(); return; }
   $("wSave").disabled = true;
   try{ await saveWorkout(rec); toast(editingWoId ? "Allenamento aggiornato" : "Allenamento salvato"); resetWoForm(); histMode = "wo"; renderHist(); showView("hist"); }
   catch(err){ toast(err && err.code==="storage" ? "Memoria del browser non disponibile: esci dalla navigazione privata" : "Salvataggio non riuscito, riprova"); }
@@ -463,6 +506,7 @@ function editWorkout(id){
   $("wLabel").value = w.label || ""; $("wTime").value = w.time ? fmt(w.time) : ""; $("wDist").value = w.dist ?? "";
   $("wSpm").value = w.spm ?? ""; $("wHrEnd").value = w.hrEnd ?? ""; $("wHrRec").value = w.hrRec ?? ""; $("wNote").value = w.note || "";
   $("woTitle").textContent = "Modifica allenamento"; $("wSave").textContent = "Salva modifiche"; $("wCancel").hidden = false;
+  fillAthSel("wAth","");
   updateWoLive(); setNewMode("wo"); showView("test");
 }
 function logFromProgram(ref){
@@ -471,6 +515,31 @@ function logFromProgram(ref){
   setNewMode("wo"); showView("test");
 }
 const sortedWo = () => workouts.slice().sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:(a.updatedAt<b.updatedAt?-1:1));
+
+
+/* ---------- atleta: io o un compagno ---------- */
+let others = [];   // dati inseriti per altri atleti (vanno solo alla squadra)
+function myName(){ return (profile.name||"").trim(); }
+function teamNames(){
+  const set = new Set();
+  const td = (teamCache && teamCache.data) || teamLast;
+  if(td){ (td.athletes||[]).forEach(n=>set.add(n)); td.workouts.forEach(w=>set.add(w.athlete)); td.tests.forEach(t=>set.add(t.athlete)); }
+  others.forEach(o=>set.add(o.athlete));
+  set.delete(myName()); set.delete(""); set.delete(undefined);
+  return [...set].sort((a,b)=>a.localeCompare(b,"it"));
+}
+function fillAthSel(id, keep){
+  const sel = $(id); const cur = keep !== undefined ? keep : sel.value;
+  sel.innerHTML = `<option value="">Io${myName()?" ("+esc(myName())+")":""}</option>` + teamNames().map(n=>`<option>${esc(n)}</option>`).join("") + `<option value="__new">Altro atleta…</option>`;
+  sel.value = [...sel.options].some(o=>o.value===cur) ? cur : "";
+  $(id+"NewL").hidden = sel.value !== "__new";
+}
+["tAth","wAth"].forEach(id => $(id).addEventListener("change", e => { $(id+"NewL").hidden = e.target.value !== "__new"; if(e.target.value==="__new") $(id+"New").focus(); }));
+function chosenAthlete(id){
+  const v = $(id).value;
+  if(v === "__new") return $(id+"New").value.trim() || null;
+  return v; // "" = io
+}
 
 /* ---------- calcoli ---------- */
 const sorted = () => sessions.slice().sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:0);
@@ -501,12 +570,14 @@ function hrRec(end, rec){ return (end!=null && rec!=null) ? `${end} → ${rec} <
 
 function renderHist(){
   const v = $("v-hist");
-  const seg = `<div class="seg" id="histSeg"><button type="button" data-hm="test" aria-pressed="${histMode==="test"}">Test (${sessions.length})</button><button type="button" data-hm="wo" aria-pressed="${histMode==="wo"}">Allenamenti (${workouts.length})</button></div>`;
+  const seg = `<div class="seg three" id="histSeg"><button type="button" data-hm="test" aria-pressed="${histMode==="test"}">Test (${sessions.length})</button><button type="button" data-hm="wo" aria-pressed="${histMode==="wo"}">Allenam. (${workouts.length})</button><button type="button" data-hm="trend" aria-pressed="${histMode==="trend"}">Grafici</button></div>`;
   const remind = backupDue() ? `<div class="banner" style="margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Ci sono dati non salvati in un backup. Esporta un CSV per non perderli se cambi telefono.</span><button class="btn small" data-act="backup">Backup</button></div>` : "";
-  if(histMode === "wo"){ v.innerHTML = seg + remind + renderWoList(); return; }
+  const share = shareBanner();
+  if(histMode === "wo"){ v.innerHTML = seg + share + remind + renderWoList(); return; }
+  if(histMode === "trend"){ v.innerHTML = seg + trendHTML(); return; }
   const s = sorted().reverse();
   if(!s.length){ v.innerHTML = seg + `<div class="card empty"><b>Nessuna sessione</b>Le sessioni di test compariranno qui, la più recente in alto. Aggiungi la prima dalla scheda Nuovo.</div>`; return; }
-  v.innerHTML = seg + remind + s.map((x,i) => {
+  v.innerHTML = seg + share + remind + s.map((x,i) => {
     const prev = s[i+1];
     const cell = (m, val) => `<div class="m"><small>${m.n}</small><b>${val==null?"–":(m.time?fmt(val):val)}</b>${prev?delta(val, m.get(prev), m):""}</div>`;
     const confirm = pendingDelete===x.id ? `<div class="confirm">Eliminare definitivamente questa sessione?<div class="row"><button class="btn small danger" data-act="del-yes" data-id="${x.id}">Elimina</button><button class="btn small ghost" data-act="del-no">Annulla</button></div></div>` : "";
@@ -521,6 +592,7 @@ function renderHist(){
         ${cell(METRICS[3], x.pushups)}${cell(METRICS[4], x.abs)}${cell(METRICS[5], x.squats)}${cell(METRICS[6], x.lumbar)}
       </div>
       ${x.note?`<p class="hint" style="margin:10px 0 0">${esc(x.note)}</p>`:""}
+      ${shareStatus(x)}
       ${confirm}
     </article>`;
   }).join("");
@@ -544,6 +616,7 @@ function renderWoList(){
         <div class="m" style="grid-column:1/-1"><small>FC fine → dopo 3'</small><b>${hrRec(w.hrEnd, w.hrRec)}</b></div>
       </div>
       ${w.note?`<p class="hint" style="margin:10px 0 0">${esc(w.note)}</p>`:""}
+      ${shareStatus(w)}
       ${confirm}
     </article>`;
   }).join("");
@@ -553,6 +626,7 @@ $("v-hist").addEventListener("click", async e => {
   const b = e.target.closest("button[data-act]"); if(!b) return;
   const a = b.dataset.act, id = b.dataset.id;
   if(a==="backup"){ showView("prof"); return; }
+  if(a==="sync"){ syncAll(true); return; }
   if(a==="wedit"){ editWorkout(id); return; }
   if(a==="wdel"){ pendingDelete = id; renderHist(); return; }
   if(a==="wdel-yes"){ pendingDelete = null; try{ await deleteWorkout(id); toast("Allenamento eliminato"); }catch(err){ toast("Eliminazione non riuscita"); } return; }
@@ -562,8 +636,8 @@ $("v-hist").addEventListener("click", async e => {
   else if(a==="del-yes"){ pendingDelete = null; try{ await deleteSession(id); toast("Sessione eliminata"); }catch(err){ toast("Eliminazione non riuscita"); } }
 });
 
-function chart(m){
-  const pts = sorted().map(s => ({d:s.date, v:m.get(s)})).filter(p => p.v!=null);
+function chart(m, pts0){
+  const pts = pts0 || sorted().map(s => ({d:s.date, v:m.get(s)})).filter(p => p.v!=null);
   if(!pts.length) return "";
   const W=320,H=130,L=46,R=12,T=14,B=26;
   let lo=Math.min(...pts.map(p=>p.v)), hi=Math.max(...pts.map(p=>p.v));
@@ -582,14 +656,22 @@ function chart(m){
     ${area?`<path d="${area}" fill="var(--soft)" stroke="none"/>`:""}
     <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
     ${pts.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${i===pts.length-1?4.5:3}" fill="${i===pts.length-1?"var(--accent)":"var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`).join("")}
-    ${pts.map((p,i)=> (pts.length<=6 || i===0 || i===pts.length-1) ? `<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${new Date(p.d+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"})}</text>`:"").join("")}
+    ${pts.map((p,i)=> (pts.length<=6 || i===0 || i===pts.length-1) ? `<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="${pts.length>1 && i===pts.length-1 ? "end" : (pts.length>1 && i===0 ? "start" : "middle")}">${new Date(p.d+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"})}</text>`:"").join("")}
   </svg></div>`;
 }
-function renderTrend(){
-  const v = $("v-trend");
-  if(!sessions.length){ v.innerHTML = `<div class="card empty"><b>Ancora nessun dato</b>Dopo il primo test vedrai qui l'andamento di ogni prova, sessione dopo sessione.</div>`; return; }
-  v.innerHTML = METRICS.filter(m=>m.k!=="t3000").map(chart).join("");
+const WO_SPLIT = {n:"Remoergometro · passo /500", time:true, lower:true};
+const WO_REC = {n:"Recupero FC in 3'", time:false, lower:false};
+function woPts(list){
+  const erg = list.filter(w => w.type==="Remoergometro" && woSplit(w)).sort((a,b)=>a.date<b.date?-1:1).map(w => ({d:w.date, v:woSplit(w)}));
+  const rec = list.filter(w => w.hrEnd!=null && w.hrRec!=null).sort((a,b)=>a.date<b.date?-1:1).map(w => ({d:w.date, v:w.hrEnd-w.hrRec}));
+  return {erg, rec};
 }
+function trendHTML(){
+  if(!sessions.length && !workouts.length) return `<div class="card empty"><b>Ancora nessun dato</b>Dopo il primo test o allenamento vedrai qui l'andamento, sessione dopo sessione.</div>`;
+  const wp = woPts(workouts);
+  return chart(WO_SPLIT, wp.erg) + chart(WO_REC, wp.rec) + METRICS.filter(m=>m.k!=="t3000").map(m=>chart(m)).join("");
+}
+function renderTrend(){}
 
 function renderProf(){
   if(document.activeElement && document.activeElement.closest && document.activeElement.closest("#v-prof .grid")) {} else {
@@ -674,7 +756,7 @@ function markBackup(){ try{ localStorage.setItem(LS+".backup", new Date().toISOS
 function backupDue(){
   if(!sessions.length && !workouts.length) return false;
   const lb = getLastBackup(); if(!lb) return true;
-  return sessions.concat(workouts).some(x => x.updatedAt && x.updatedAt > lb);
+  return sessions.concat(workouts, others).some(x => x.updatedAt && x.updatedAt > lb);
 }
 function renderHeader(){
   $("who").textContent = profile.name ? profile.name + " · inverno 2026/27" : "Programma invernale 2026/27";
@@ -757,13 +839,168 @@ function renderProg(){
   v.querySelectorAll(".pv").forEach(el => el.textContent = vals[el.dataset.k] || "");
 }
 $("v-prog").addEventListener("click", e => { const b = e.target.closest("button[data-log]"); if(b) logFromProgram(b.dataset.log); });
-function renderAll(){ renderHeader(); renderHist(); renderTrend(); renderProg(); renderProf(); }
+
+/* ---------- condivisione con la squadra (foglio Google) ---------- */
+const TEAM_URL = "https://script.google.com/macros/s/AKfycby5Tk7KHmU9jt-ag9BoPX_3ywTzVMggRdiyEc-T28z9R0pHfPQNYVZ8iCDixkSSCw70/exec";               // URL dell'app web dello script nel foglio: finché è vuoto la Squadra mostra dati di esempio
+const TEAM_CODE = "ichnusa1891";   // deve essere uguale a CODICE_SQUADRA nello script
+let delq = [], syncing = false;
+const isSent = r => r.sentAt && (!r.updatedAt || r.sentAt >= r.updatedAt);
+function splitRef(refLabel){ const m = /^(\d+)ª sett\. · (.*)$/.exec(refLabel||""); return m ? {week:+m[1], ref:m[2]} : {week:null, ref:refLabel||""}; }
+function payload(kind, r, athlete){
+  if(kind === "workout"){ const sr = splitRef(r.refLabel);
+    return {id:r.id, athlete, date:r.date, week:sr.week, ref:sr.ref, type:r.type, label:r.label, time:r.time, dist:r.dist, spm:r.spm, hrEnd:r.hrEnd, hrRec:r.hrRec, note:r.note, by:r.by||""}; }
+  return {id:r.id, athlete, date:r.date, label:r.label, t3000:r.t3000, hr3000end:r.hr3000end, hr3000rec:r.hr3000rec, t500:r.t500, hr500end:r.hr500end, hr500rec:r.hr500rec, pushups:r.pushups, abs:r.abs, squats:r.squats, lumbar:r.lumbar, note:r.note, by:r.by||""};
+}
+async function postTeam(body){
+  const r = await fetch(TEAM_URL, {method:"POST", body: JSON.stringify(Object.assign({codice:TEAM_CODE}, body))});
+  const j = await r.json(); if(!j.ok) throw new Error(j.errore || "errore"); return j;
+}
+function pendingList(){
+  const out = [];
+  if(myName()){ sessions.forEach(r => { if(!isSent(r)) out.push(["test", r, myName()]); }); workouts.forEach(r => { if(!isSent(r)) out.push(["workout", r, myName()]); }); }
+  others.forEach(r => { if(!isSent(r)) out.push([r.kind==="test"?"test":"workout", r, r.athlete]); });
+  return out;
+}
+function pendingCount(){ return pendingList().length + delq.length; }
+async function syncAll(manual){
+  if(!TEAM_URL || syncing) return;
+  if(!navigator.onLine){ if(manual) toast("Sei offline: i dati partono appena torna la rete"); return; }
+  syncing = true; let sent = 0, failed = 0;
+  try{
+    for(const d of delq.slice()){ try{ await postTeam({azione:"elimina", tipo:d.tipo, id:d.id}); delq = delq.filter(x=>x!==d); lsSave(); sent++; }catch(e){ failed++; } }
+    for(const [kind, r, athlete] of pendingList()){
+      try{ const stamp = new Date().toISOString(); await postTeam({azione:"salva", tipo:kind, dati:payload(kind, r, athlete)}); r.sentAt = stamp; if(!r.updatedAt) r.updatedAt = stamp; lsSave(); sent++; }
+      catch(e){ failed++; }
+    }
+  } finally { syncing = false; }
+  renderAll();
+  if(sent) loadTeam(true);
+  if(manual || failed) toast(failed ? `Invio non riuscito per ${failed} dati: riprovo più tardi` : (sent ? "Dati inviati alla squadra" : "Tutto già inviato"));
+}
+function queueDelete(tipo, r){ if(TEAM_URL && r && r.sentAt){ delq.push({tipo, id:r.id}); lsSave(); } }
+function shareStatus(r){
+  if(!TEAM_URL) return "";
+  return isSent(r) ? `<p class="hint" style="margin:8px 0 0">✓ Condiviso con la squadra</p>` : `<p class="hint" style="margin:8px 0 0">⏳ Da inviare alla squadra</p>`;
+}
+function shareBanner(){
+  if(!TEAM_URL) return "";
+  if(!myName()) return `<div class="banner" style="margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Scrivi il tuo nome nel Profilo per condividere i tuoi dati con la squadra.</span><button class="btn small" data-act="backup">Profilo</button></div>`;
+  const n = pendingCount();
+  return n ? `<div class="banner" style="margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px"><span>${n} ${n===1?"dato":"dati"} da inviare alla squadra.</span><button class="btn small" data-act="sync">Invia ora</button></div>` : "";
+}
+window.addEventListener("online", () => syncAll());
+
+/* ---------- squadra ---------- */
+let teamCache = null, teamLast = null, teamSel = null, teamMode = "ath", teamRef = null;
+function exampleTeam(){
+  const today = new Date(); const d = k => { const x = new Date(today); x.setDate(x.getDate()-k); return x.toISOString().slice(0,10); };
+  const people = [["Marco",124,146,112,[10,8,5,3,1]],["Giulia",131,151,118,[10,8,6,3,1]],["Paolo",119,142,104,[9,8,5,2]],["Sara",136,155,121,[10,7,5,3,1]],["Luca",127,149,116,[10,8,4]],["Anna",140,153,124,[11,9]]];
+  const refs = [["1ª sett. · Allenamento 1 · Remoergometro + circuiti","Remoergometro","20' a 18/20 colpi",1200,14],["1ª sett. · Allenamento 2 · Remoergometro + corpo libero","Remoergometro","20' lungo",1200,12],["1ª sett. · Allenamento 3 · Barca 10 km","Barca","10 km",null,0],["2ª sett. · Allenamento 1 · Remoergometro + tabata + isometria","Remoergometro","2×10' 24/20 colpi",1200,6],["2ª sett. · Allenamento 2 · Circuito + 2×4 km + braccia","Remoergometro","2×4 km",1200,-5]];
+  const workouts = [], tests = [];
+  people.forEach(([n,sp,hr,rec,days],pi) => {
+    tests.push({athlete:n, date:"2026-10-17", label:"Test di ingresso", t3000:sp*6, hr3000end:hr+22, hr3000rec:rec+8, t500:sp-22, pushups:30+pi*3, abs:38+pi, squats:105+pi*4, lumbar:28+pi});
+    days.forEach((k,i) => {
+      const r = refs[i], jitter = ((pi*7+i*5)%5)-2;
+      if(r[1]==="Barca"){ workouts.push({athlete:n, date:d(k), refLabel:r[0], type:"Barca", label:r[2], time:(sp+44)*20+jitter*10, dist:10000, spm:20, hrEnd:hr+3, hrRec:rec+4}); return; }
+      const split = sp + r[4] - i + jitter*0.6, dist = Math.round(1200/split*500);
+      workouts.push({athlete:n, date:d(k), refLabel:r[0], type:"Remoergometro", label:r[2], time:1200, dist, spm:19+(i%2), hrEnd:hr - i + jitter, hrRec:rec - i*2 + jitter});
+    });
+  });
+  return {example:true, updated:new Date().toISOString(), workouts, tests};
+}
+async function loadTeam(force){
+  if(teamCache && !force) return;
+  let data;
+  if(TEAM_URL){
+    try{
+      const r = await fetch(TEAM_URL + "?codice=" + encodeURIComponent(TEAM_CODE), {cache:"no-cache"}); const j = await r.json();
+      if(!j.ok) throw new Error(j.errore);
+      data = {updated: j.aggiornato, athletes: j.atleti || [], tests: j.tests || [],
+        workouts: (j.workouts || []).map(w => Object.assign({}, w, {refLabel: w.week ? `${w.week}ª sett. · ${w.ref}` : (w.ref || "")}))};
+    }
+    catch(e){ teamCache = {error:true}; renderTeam(); return; }
+  } else data = exampleTeam();
+  teamCache = {data}; teamLast = data; renderTeam(); fillAthSel("tAth"); fillAthSel("wAth");
+}
+function teamAll(){
+  const td = teamCache && teamCache.data; if(!td) return {workouts:[], tests:[]};
+  const me = myName() || "Tu";
+  // con il foglio collegato: dati del foglio + quelli locali non ancora arrivati (stesso id = vince il foglio)
+  const ids = new Set(td.workouts.map(x=>x.id).concat(td.tests.map(x=>x.id)));
+  const keep = r => !TEAM_URL || !ids.has(r.id);
+  const mineW = workouts.filter(keep).map(w => Object.assign({}, w, {athlete:me, mine:true}));
+  const mineT = sessions.filter(keep).map(t => Object.assign({}, t, {athlete:me, mine:true}));
+  const oW = others.filter(o=>o.kind==="workout" && keep(o)).map(o => Object.assign({}, o, {mine:true}));
+  const oT = others.filter(o=>o.kind==="test" && keep(o)).map(o => Object.assign({}, o, {mine:true}));
+  const byMe = r => r.by && myName() && r.by === myName() ? Object.assign({}, r, {mine:true}) : r;
+  return {workouts: td.workouts.map(byMe).concat(mineW, oW), tests: td.tests.map(byMe).concat(mineT, oT)};
+}
+const daysAgo = d => Math.round((new Date(new Date().toISOString().slice(0,10)+"T12:00:00") - new Date(d+"T12:00:00"))/86400000);
+function agoTxt(n){ return n<=0 ? "oggi" : n===1 ? "ieri" : n+" giorni fa"; }
+function renderTeam(){
+  const v = $("v-team");
+  if(!teamCache){ v.innerHTML = `<div class="card empty"><b>Caricamento squadra…</b></div>`; loadTeam(); return; }
+  if(teamCache.error){ v.innerHTML = `<div class="card empty"><b>Squadra non raggiungibile</b>Serve la connessione a internet per vedere i dati dei compagni.<div class="row" style="justify-content:center;margin-top:12px"><button class="btn small" data-t="reload">Riprova</button></div></div>`; return; }
+  const all = teamAll();
+  const banner = teamCache.data.example ? `<div class="banner" style="margin:0">Anteprima con <b>dati di esempio</b>: nomi e valori sono inventati. I tuoi dati e quelli inseriti per altri compaiono insieme agli esempi.</div>`
+    : `<div class="row" style="justify-content:space-between;align-items:center"><span class="hint" style="margin:0">Aggiornato alle ${new Date(teamCache.data.updated||Date.now()).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span><button class="btn small ghost" data-t="reload">Aggiorna</button></div>`;
+  const seg = `<div class="seg" id="teamSeg"><button type="button" data-tm="ath" aria-pressed="${teamMode==="ath"}">Atleti</button><button type="button" data-tm="ref" aria-pressed="${teamMode==="ref"}">Per allenamento</button></div>`;
+  if(teamSel){ v.innerHTML = athleteDetail(teamSel, all); return; }
+  v.innerHTML = banner + seg + (teamMode==="ath" ? athleteList(all) : byWorkout(all));
+}
+function athleteList(all){
+  const roster = (teamCache.data && teamCache.data.athletes) || [];
+  const names = [...new Set(roster.concat(all.workouts.map(w=>w.athlete), all.tests.map(t=>t.athlete)))].filter(Boolean).sort((a,b)=>a.localeCompare(b,"it"));
+  if(!names.length) return `<div class="card empty"><b>Nessun dato della squadra</b>Quando gli atleti inviano allenamenti e test, li vedrai qui.</div>`;
+  return names.map(n => {
+    const ws = all.workouts.filter(w=>w.athlete===n).sort((a,b)=>a.date<b.date?1:-1);
+    const ts = all.tests.filter(t=>t.athlete===n).sort((a,b)=>a.date<b.date?1:-1);
+    const lastD = [ws[0]&&ws[0].date, ts[0]&&ts[0].date].filter(Boolean).sort().pop();
+    const ago = lastD ? daysAgo(lastD) : null;
+    const erg = ws.find(w=>w.type==="Remoergometro" && woSplit(w));
+    const recW = ws.find(w=>w.hrEnd!=null && w.hrRec!=null);
+    const t3 = ts.find(t=>t.t3000);
+    const mine = n === (myName()||"Tu") ? `<span class="mine">TU</span>` : "";
+    return `<div class="card"><button type="button" class="ath" data-ath="${esc(n)}"><span><h3>${esc(n)}${mine}</h3><span class="d">${ws.length} allenamenti · ultimo ${lastD?agoTxt(ago):"–"}</span></span>${ago!=null && ago>7 ? `<span class="chip old">fermo da ${ago} gg</span>` : `<span class="go">›</span>`}</button>
+      <div class="mini"><div><small>Passo erg</small><b>${erg?fmt(woSplit(erg)):"–"}</b></div><div><small>Recupero 3'</small><b>${recW?"−"+(recW.hrEnd-recW.hrRec):"–"}</b></div><div><small>Test 3000</small><b>${t3?fmt(t3.t3000/6):"–"}</b></div></div></div>`;
+  }).join("");
+}
+function athleteDetail(n, all){
+  const ws = all.workouts.filter(w=>w.athlete===n).sort((a,b)=>a.date<b.date?1:-1);
+  const ts = all.tests.filter(t=>t.athlete===n).sort((a,b)=>a.date<b.date?1:-1);
+  const wp = woPts(ws);
+  const list = ws.map(w => { const sp = woSplit(w); return `<div class="rw"><span class="rk"></span><span class="nm">${esc(w.refLabel ? w.refLabel.split(" · ").slice(0,2).join(" · ") : (w.label||w.type))}${w.mine&&w.by!==undefined?`<span class="mine">inserito da te</span>`:""}</span><span class="pc">${sp?fmt(sp):(w.time?fmt(w.time):"–")}</span>
+      <span class="sub">${fmtDate(w.date)} · ${esc(w.type||"")}${w.dist?" · "+w.dist.toLocaleString("it-IT")+" m":""}${w.time?" · "+fmt(w.time):""} · FC ${w.hrEnd??"–"} → ${w.hrRec??"–"}${w.hrEnd!=null&&w.hrRec!=null?" (−"+(w.hrEnd-w.hrRec)+")":""}</span></div>`; }).join("");
+  const tl = ts.map(t => `<div class="rw"><span class="rk"></span><span class="nm">${esc(t.label||"Test")}</span><span class="pc">${t.t3000?fmt(t.t3000/6):"–"}</span><span class="sub">${fmtDate(t.date)} · 3000 ${t.t3000?fmt(t.t3000):"–"} · 500 ${t.t500?fmt(t.t500):"–"} · FC ${t.hr3000end??"–"} → ${t.hr3000rec??"–"}</span></div>`).join("");
+  return `<button type="button" class="back" data-t="back">‹ Squadra</button>
+    <div class="card"><h2>${esc(n)}</h2><p class="hint" style="margin:0">${ws.length} allenamenti · ${ts.length} test</p></div>
+    ${chart(WO_SPLIT, wp.erg.slice())}${chart(WO_REC, wp.rec.slice())}
+    <div class="card"><h2>Allenamenti</h2><p class="hint">Il numero a destra è il passo /500</p><div class="rows">${list || "<p class='hint'>Nessun allenamento.</p>"}</div></div>
+    <div class="card"><h2>Test</h2><p class="hint">A destra il passo /500 sul 3000</p><div class="rows">${tl || "<p class='hint'>Nessun test.</p>"}</div></div>`;
+}
+function byWorkout(all){
+  const refs = {}; all.workouts.forEach(w => { const k = w.refLabel || (w.label ? w.type+" · "+w.label : w.type); (refs[k] = refs[k] || []).push(w); });
+  const isProg = k => refs[k].some(w=>w.refLabel);
+  const keys = Object.keys(refs).sort((a,b) => { if(isProg(a)!==isProg(b)) return isProg(a)?-1:1; const la = refs[a].map(w=>w.date).sort().pop(), lb = refs[b].map(w=>w.date).sort().pop(); return la<lb?1:-1; });
+  if(!keys.length) return `<div class="card empty"><b>Nessun allenamento</b>Qui vedrai gli atleti a confronto sullo stesso allenamento.</div>`;
+  if(!teamRef || !refs[teamRef]) teamRef = keys[0];
+  const rows = refs[teamRef].slice().sort((a,b) => a.athlete.localeCompare(b.athlete,"it") || (a.date<b.date?-1:1));
+  return `<div class="card"><label>Allenamento<select id="teamRefSel">${keys.map(k=>`<option${k===teamRef?" selected":""}>${esc(k)}</option>`).join("")}</select></label></div>
+    <div class="card"><h2>Atleti</h2><p class="hint">In ordine alfabetico · a destra il passo /500</p><div class="rows">${rows.map((w,i)=>{ const sp=woSplit(w); return `<div class="rw"><span class="rk"></span><span class="nm">${esc(w.athlete)}</span><span class="pc">${sp?fmt(sp):(w.time?fmt(w.time):"–")}</span><span class="sub">${fmtDate(w.date)}${w.dist?" · "+w.dist.toLocaleString("it-IT")+" m":""}${w.spm?" · "+w.spm+" colpi":""} · FC ${w.hrEnd??"–"} → ${w.hrRec??"–"}${w.hrEnd!=null&&w.hrRec!=null?" (−"+(w.hrEnd-w.hrRec)+")":""}</span></div>`; }).join("")}</div></div>`;
+}
+$("v-team").addEventListener("click", e => {
+  const a = e.target.closest("[data-ath]"); if(a){ teamSel = a.dataset.ath; renderTeam(); window.scrollTo(0,0); return; }
+  const b = e.target.closest("[data-t]"); if(b){ if(b.dataset.t==="back"){ teamSel = null; renderTeam(); } if(b.dataset.t==="reload"){ teamCache = null; renderTeam(); } return; }
+  const m = e.target.closest("[data-tm]"); if(m){ teamMode = m.dataset.tm; renderTeam(); }
+});
+$("v-team").addEventListener("change", e => { if(e.target.id==="teamRefSel"){ teamRef = e.target.value; renderTeam(); } });
+function renderAll(){ renderHeader(); renderHist(); renderTrend(); renderProg(); renderProf(); if(!$("v-team").hidden) renderTeam(); fillAthSel("tAth"); fillAthSel("wAth"); }
 
 
 $("wipeBtn").addEventListener("click", () => { $("wipeConfirm").hidden = false; $("wipeBtn").hidden = true; });
 $("wipeNo").addEventListener("click", () => { $("wipeConfirm").hidden = true; $("wipeBtn").hidden = false; });
 $("wipeYes").addEventListener("click", () => {
-  sessions = []; profile = {}; workouts = [];
+  sessions = []; profile = {}; workouts = []; others = []; delq = [];
   try{ localStorage.removeItem(LS); localStorage.removeItem(LS+".backup"); }catch(e){}
   $("wipeConfirm").hidden = true; $("wipeBtn").hidden = false;
   $("pName").value = ""; $("pYear").value = ""; $("pSex").value = "";
@@ -772,9 +1009,11 @@ $("wipeYes").addEventListener("click", () => {
 /* avvio */
 resetForm(); resetWoForm();
 let tab = "test"; try{ tab = localStorage.getItem(LS+".tab") || "test"; }catch(e){}
-showView(["test","hist","trend","prog","prof"].includes(tab) ? tab : "test");
+if(tab==="trend") tab = "hist";
+showView(["test","hist","team","prog","prof"].includes(tab) ? tab : "test");
 connect();
 loadProgram();
+if(TEAM_URL){ syncAll(); loadTeam(); }
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();
 </script>
