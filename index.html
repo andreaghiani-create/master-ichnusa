@@ -323,7 +323,7 @@ html,body{margin:0}[hidden]{display:none!important}
 (() => {
 const $ = id => document.getElementById(id);
 const LS = "registroTest.v1";
-const APP_VERSION = "2.2 · 18 ottobre 2026";
+const APP_VERSION = "2.3 · 20 ottobre 2026";
 let db = null, coll = null, uid = null, mode = "local";
 let workouts = [], editingWoId = null, newMode = "test", histMode = "test";
 let sessions = [], profile = {}, editingId = null, pendingDelete = null;
@@ -364,7 +364,7 @@ async function saveProfile(p){
 }
 function setBanner(text){ const b=$("storeBanner"); b.textContent=text||""; b.hidden=!text; }
 async function connect(){
-  lsLoad(); renderAll();
+  lsLoad(); dedupeTests(); renderAll();
   try{ if(navigator.storage && navigator.storage.persist) await navigator.storage.persist(); }catch(e){}
   const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -386,15 +386,79 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clea
 
 /* ---------- form ---------- */
 const FIELDS = ["hr3000end","hr3000rec","hr500end","hr500rec","pushups","abs","squats","lumbar"];
+/* ---------- niente doppioni: un solo test al giorno per atleta, un solo allenamento uguale al giorno ---------- */
+const T_KEYS = ["t3000","t500"].concat(FIELDS);
+const W_KEYS = ["time","dist","spm","hrEnd","hrRec","label"];
+const filled = v => v != null && v !== "";
+function joinNotes(a, b){ a = (a||"").trim(); b = (b||"").trim(); return !b || a.includes(b) ? a : !a || b.includes(a) ? b : a + " · " + b; }
+// base = record già esistente, add = dati nuovi: i campi compilati in add sostituiscono, quelli vuoti lasciano il dato esistente
+function mergeRec(base, add, keys){
+  const m = {};
+  ["kind","id","date","label","type","ref","refLabel","athlete","by","sentAt","note"].concat(keys).forEach(k => { if(base[k] !== undefined) m[k] = base[k]; });
+  keys.forEach(k => { if(filled(add[k])) m[k] = add[k]; });
+  if(!m.label && add.label) m.label = add.label;
+  if(add.kind === "workout"){ if(!m.type || m.type === "Altro") m.type = add.type; if(!m.refLabel && add.refLabel){ m.refLabel = add.refLabel; m.ref = add.ref; } }
+  m.note = joinNotes(base.note, add.note);
+  m.kind = add.kind; m.updatedAt = new Date().toISOString();
+  return m;
+}
+const sameWo = (a, b) => a.date === b.date && (a.refLabel || "") === (b.refLabel || "") &&
+  (!!a.refLabel || ((a.type||"") === (b.type||"") && (!a.label || !b.label || a.label === b.label)));
+// cerca un record della stessa giornata: prima tra quelli di questo telefono, poi tra quelli già nel foglio
+function findTwin(rec, athlete){
+  const isTest = rec.kind === "test", same = x => isTest ? x.date === rec.date : sameWo(x, rec);
+  let local, list;
+  if(!athlete){ list = isTest ? sessions : workouts; local = list.find(same); }
+  else { list = others; local = others.find(x => (x.kind === "test") === isTest && nameKey(x.athlete) === nameKey(athlete) && same(x)); }
+  if(local) return {rec: local, list};
+  const td = teamCache && teamCache.data;
+  if(td && !td.example && TEAM_URL){
+    const who = nameKey(athlete || myName());
+    const r = (isTest ? td.tests : td.workouts).find(x => nameKey(x.athlete) === who && same(x) && !delq.some(d => d.id === x.id));
+    // nuovo id: il foglio riconosce la stessa giornata e unisce i dati alla riga esistente senza perdere nulla
+    if(r){ const c = Object.assign({}, r, {kind: rec.kind, id: rec.id}); delete c.athlete; delete c.week; delete c.ids; delete c.sentAt;
+      if(athlete){ c.athlete = athlete; c.by = rec.by; }
+      if(!isTest && c.refLabel){ const o = progOptions().find(o => o.label === c.refLabel); c.ref = o ? o.v : ""; }
+      return {rec: c, list: null, remote: true}; }
+  }
+  return null;
+}
+// all'avvio: unisce i doppioni di test già presenti (stessa data, stesso atleta) e cancella dal foglio quelli in più
+function dedupeTests(){
+  let changed = false;
+  const run = (arr, keyOf) => {
+    const groups = {}; arr.forEach(r => { if(r.kind === "test" || arr === sessions){ const k = keyOf(r); (groups[k] = groups[k] || []).push(r); } });
+    Object.values(groups).forEach(g => {
+      if(g.length < 2) return;
+      g.sort((a,b) => (a.updatedAt||a.id) < (b.updatedAt||b.id) ? -1 : 1);
+      let m = g[0]; g.slice(1).forEach(r => { m = mergeRec(m, Object.assign({}, r, {kind:"test"}), T_KEYS); queueDelete("test", r); });
+      const ids = new Set(g.map(r => r.id)); const i = arr.indexOf(g[0]);
+      for(let j = arr.length - 1; j >= 0; j--) if(ids.has(arr[j].id) && j !== i) arr.splice(j, 1);
+      arr[arr.indexOf(g[0])] = m; changed = true;
+    });
+  };
+  run(sessions, r => r.date);
+  run(others, r => nameKey(r.athlete) + "|" + r.date);
+  if(changed) lsSave();
+  return changed;
+}
 function resetForm(){
   $("f").reset(); editingId = null;
   $("date").value = new Date().toISOString().slice(0,10);
-  $("label").value = sessions.length ? "Test " + Math.min(sessions.length+1,4) : "Test di ingresso";
-  if(sessions.length >= 4) $("label").value = "Altro";
+  setDefaultLabel(sessions.length);
   $("formTitle").textContent = "Nuova sessione"; $("saveBtn").textContent = "Salva sessione"; $("cancelEdit").hidden = true;
   fillAthSel("tAth","");
   updateLive();
 }
+function setDefaultLabel(n){ $("label").value = n >= 4 ? "Altro" : n ? "Test " + (n+1) : "Test di ingresso"; }
+// test inserito per un compagno: il nome della sessione segue i suoi test, non i miei
+$("tAth").addEventListener("change", e => {
+  if(editingId) return; const v = e.target.value;
+  if(!v){ setDefaultLabel(sessions.length); return; }
+  if(v === "__new"){ setDefaultLabel(0); return; }
+  const days = new Set(teamAll().tests.filter(t => nameKey(t.athlete) === nameKey(v) && t.date !== $("date").value).map(t => t.date));
+  setDefaultLabel(days.size);
+});
 function updateLive(){ const t = parseTime($("t3000").value); $("split3000").textContent = t ? fmt(t/6) : "–:––.–"; }
 function fmtDigits(d){
   d = d.replace(/\D/g,"").replace(/^0+/,"").slice(0,6);
@@ -420,9 +484,11 @@ $("f").addEventListener("submit", async e => {
   if(!has){ toast("Inserisci almeno un risultato"); return; }
   const ath = chosenAthlete("tAth");
   if(ath === null){ toast("Scrivi il nome dell'atleta"); return; }
-  if(ath){ rec.athlete = ath; rec.by = myName(); others.push(rec); if(!lsSave()){ toast("Memoria del browser non disponibile"); return; } toast("Test salvato per " + ath); resetForm(); renderAll(); syncAll(); return; }
+  let merged = false;
+  if(!editingId){ const tw = findTwin(rec, ath); if(tw){ const m = mergeRec(tw.rec, rec, T_KEYS); if(ath){ m.athlete = ath; m.by = myName(); } Object.keys(rec).forEach(k => delete rec[k]); Object.assign(rec, m); merged = true; } }
+  if(ath){ rec.athlete = ath; rec.by = myName(); const i = others.findIndex(x => x.id === rec.id); if(i >= 0) others[i] = rec; else others.push(rec); if(!lsSave()){ toast("Memoria del browser non disponibile"); return; } toast((merged ? "Dati aggiunti al test del " + fmtDate(rec.date) + " di " : "Test salvato per ") + ath); resetForm(); renderAll(); syncAll(); return; }
   $("saveBtn").disabled = true;
-  try{ await saveSession(rec); toast(editingId ? "Sessione aggiornata" : "Sessione salvata"); resetForm(); showView("hist"); }
+  try{ await saveSession(rec); toast(merged ? "Dati aggiunti al test del " + fmtDate(rec.date) : editingId ? "Sessione aggiornata" : "Sessione salvata"); resetForm(); showView("hist"); }
   catch(err){ toast(err && err.code==="storage" ? "Memoria del browser non disponibile: esci dalla navigazione privata" : "Salvataggio non riuscito, riprova"); }
   finally{ $("saveBtn").disabled = false; }
 });
@@ -496,9 +562,11 @@ $("fw").addEventListener("submit", async e => {
   if(rec.hrEnd != null && rec.hrRec != null && rec.hrRec > rec.hrEnd){ toast("La FC dopo 3' è più alta di quella a fine lavoro: controlla i valori"); return; }
   const ath = chosenAthlete("wAth");
   if(ath === null){ toast("Scrivi il nome dell'atleta"); return; }
-  if(ath && !editingWoId){ rec.athlete = ath; rec.by = myName(); others.push(rec); if(!lsSave()){ toast("Memoria del browser non disponibile"); return; } toast("Allenamento salvato per " + ath); resetWoForm(); renderAll(); syncAll(); return; }
+  let merged = false;
+  if(!editingWoId){ const tw = findTwin(rec, ath); if(tw){ const m = mergeRec(tw.rec, rec, W_KEYS); if(ath){ m.athlete = ath; m.by = myName(); } Object.keys(rec).forEach(k => delete rec[k]); Object.assign(rec, m); merged = true; } }
+  if(ath && !editingWoId){ rec.athlete = ath; rec.by = myName(); const i = others.findIndex(x => x.id === rec.id); if(i >= 0) others[i] = rec; else others.push(rec); if(!lsSave()){ toast("Memoria del browser non disponibile"); return; } toast((merged ? "Dati aggiunti all'allenamento di " : "Allenamento salvato per ") + ath); resetWoForm(); renderAll(); syncAll(); return; }
   $("wSave").disabled = true;
-  try{ await saveWorkout(rec); toast(editingWoId ? "Allenamento aggiornato" : "Allenamento salvato"); resetWoForm(); histMode = "wo"; renderHist(); showView("hist"); }
+  try{ await saveWorkout(rec); toast(merged ? "Dati aggiunti all'allenamento del " + fmtDate(rec.date) : editingWoId ? "Allenamento aggiornato" : "Allenamento salvato"); resetWoForm(); histMode = "wo"; renderHist(); showView("hist"); }
   catch(err){ toast(err && err.code==="storage" ? "Memoria del browser non disponibile: esci dalla navigazione privata" : "Salvataggio non riuscito, riprova"); }
   finally{ $("wSave").disabled = false; }
 });
@@ -955,14 +1023,18 @@ function teamAll(){
   const td = teamCache && teamCache.data; if(!td) return {workouts:[], tests:[]};
   const me = myName() || "Tu";
   // con il foglio collegato: dati del foglio + quelli locali non ancora arrivati (stesso id = vince il foglio)
-  const ids = new Set(td.workouts.map(x=>x.id).concat(td.tests.map(x=>x.id)));
+  const fresh = new Set(sessions.concat(workouts, others).filter(r => !isSent(r)).map(r => r.id).concat(delq.map(d => d.id)));
+  const allIds = x => x.ids && x.ids.length ? x.ids : [x.id];
+  const shown = x => !allIds(x).every(i => fresh.has(i));   // riga nascosta solo se tutti i suoi inserimenti stanno per essere aggiornati o eliminati da qui
+  const tdW = td.workouts.filter(shown), tdT = td.tests.filter(shown);
+  const ids = new Set(tdW.flatMap(allIds).concat(tdT.flatMap(allIds)));
   const keep = r => !TEAM_URL || !ids.has(r.id);
   const mineW = workouts.filter(keep).map(w => Object.assign({}, w, {athlete:me, mine:true}));
   const mineT = sessions.filter(keep).map(t => Object.assign({}, t, {athlete:me, mine:true}));
   const oW = others.filter(o=>o.kind==="workout" && keep(o)).map(o => Object.assign({}, o, {mine:true}));
   const oT = others.filter(o=>o.kind==="test" && keep(o)).map(o => Object.assign({}, o, {mine:true}));
   const byMe = r => r.by && myName() && r.by === myName() ? Object.assign({}, r, {mine:true}) : r;
-  return {workouts: td.workouts.map(byMe).concat(mineW, oW), tests: td.tests.map(byMe).concat(mineT, oT)};
+  return {workouts: tdW.map(byMe).concat(mineW, oW), tests: tdT.map(byMe).concat(mineT, oT)};
 }
 const daysAgo = d => Math.round((new Date(new Date().toISOString().slice(0,10)+"T12:00:00") - new Date(d+"T12:00:00"))/86400000);
 function agoTxt(n){ return n<=0 ? "oggi" : n===1 ? "ieri" : n+" giorni fa"; }
